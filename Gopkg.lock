@@ -21,9 +21,9 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/vjeantet/jodaTime"
+  name = "github.com/segmentio/kafka-go"
   packages = ["."]
-  revision = "be924ce213fb35f66c810b61e051965eb78b82d0"
+  revision = "5484e4ac8fd66924b59878c0410a1823a8833e69"
 
 [[projects]]
   branch = "master"
@@ -38,17 +38,14 @@
   branch = "v2"
   name = "gopkg.in/mgo.v2"
   packages = [
-    ".",
     "bson",
-    "internal/json",
-    "internal/sasl",
-    "internal/scram"
+    "internal/json"
   ]
   revision = "3f83fa5005286a7fe593b055f0d7771a7dce4655"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f4f9a418e744110843209183534345a11de98ff24beb5bef448b3c689bc619e2"
+  inputs-digest = "bee30feabb336ab6e4eef68ce0ada92a2f41550b5cf409b86653d14d58c6ff59"
   solver-name = "gps-cdcl"
   solver-version = 1

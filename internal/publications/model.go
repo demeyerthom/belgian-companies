@@ -11,4 +11,5 @@ type Publication struct {
 	DossierNumber   string        `bson:"dossier_number" json:"dossier_number"`
 	DatePublication string        `bson:"date_publication" json:"date_publication"`
 	Type            string        `bson:"type" json:"type"`
+	Raw             string        `bson:"raw" json:"raw"`
 }
