@@ -14,9 +14,7 @@ import (
 	"strings"
 )
 
-var rootUrl = "http://www.ejustice.just.fgov.be"
-
-func ParsePublicationPage(result []byte, documentPath string, withDocuments bool) (publications []Publication, err error) {
+func ParsePublicationPage(result []byte) (publications []Publication, err error) {
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(result))
 	if err != nil {
 		panic(err)
@@ -30,13 +28,6 @@ func ParsePublicationPage(result []byte, documentPath string, withDocuments bool
 		publication, err := parseNode(*s)
 		if err != nil {
 			return
-		}
-
-		if withDocuments {
-			err = downloadFile(documentPath+publication.FileLocation, rootUrl+publication.FileLocation)
-			if err != nil {
-				panic(err)
-			}
 		}
 
 		publications = append(publications, publication)
@@ -78,7 +69,7 @@ func parseNode(node goquery.Selection) (publication Publication, err error) {
 	return publication, nil
 }
 
-func downloadFile(filePath string, url string) error {
+func DownloadFile(filePath string, url string) error {
 	dirPath := filepath.Dir(filePath)
 	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
 		os.MkdirAll(dirPath, os.ModePerm)

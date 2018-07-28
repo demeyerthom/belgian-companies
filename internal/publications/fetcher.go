@@ -30,12 +30,10 @@ func buildUrl(rowId int, from time.Time, to time.Time) string {
 	return fmt.Sprintf(urlTemplate, rowId, fromYear, fromMonth, fromDay, toYear, toMonth, toDay, fromYear, fromMonth, fromDay, toYear, toMonth, toDay)
 }
 
-func FetchPublicationsPage(row int, from time.Time, to time.Time) (result FetchedPublicationPage, err error) {
+func FetchPublicationsPage(client *http.Client, row int, from time.Time, to time.Time) (result FetchedPublicationPage, err error) {
 	url := buildUrl(row, from, to)
 
-	fmt.Println(url)
-
-	resp, err := http.Get(url)
+	resp, err := client.Get(url)
 	if err != nil {
 		return result, err
 	}
@@ -48,13 +46,11 @@ func FetchPublicationsPage(row int, from time.Time, to time.Time) (result Fetche
 	body, _ := ioutil.ReadAll(resp.Body)
 	raw := string(body[:])
 
-	result.Raw = raw
-	result.OriginalUrl = url
-	result.DateAdded = time.Now()
-	result.Version = 1
-
-	if strings.Contains(raw, "Einde van de lijst") {
-		err = errors.New("end of list")
+	if !strings.Contains(raw, "Einde van de lijst") {
+		result.Raw = raw
+		result.OriginalUrl = url
+		result.DateAdded = time.Now()
+		result.Version = 1
 	}
 
 	return result, err

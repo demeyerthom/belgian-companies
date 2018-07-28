@@ -28,3 +28,4 @@ services:
     image: osminogin/tor-simple
     ports:
       - 9050:9050
+      - 9150:9150
