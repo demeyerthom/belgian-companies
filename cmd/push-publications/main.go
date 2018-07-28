@@ -71,4 +71,5 @@ func main() {
 	}
 
 	log.WithField("count", count).Info(fmt.Sprintf("Finished processing queue: added %d publications", count))
+	os.Exit(0)
 }

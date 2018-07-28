@@ -16,13 +16,13 @@ import (
 
 var (
 	defaultTimeLayout = "2006-01-02"
-	rows              = 1
+	defaultRows       = 1
 	writer            *kafka.Writer
 	client            *http.Client
 	topic             = kingpin.Flag("topic", "the Kafka topic to write to").Default("publication-pages").String()
 	kafkaBrokers      = kingpin.Flag("brokers", "which kafka brokers to use").Default("localhost:9092").Strings()
-	from              = kingpin.Flag("from", "the duration").Default(time.Now().AddDate(0, 0, -1).Format(defaultTimeLayout)).String()
-	to                = kingpin.Flag("to", "the duration").Default(time.Now().AddDate(0, 0, -1).Format(defaultTimeLayout)).String()
+	start             = kingpin.Flag("start", "the day from which to count").Default(time.Now().AddDate(0, 0, -1).Format(defaultTimeLayout)).String()
+	end               = kingpin.Flag("end", "the day unti which to process").Default(time.Now().AddDate(0, 0, -1).Format(defaultTimeLayout)).String()
 )
 
 func init() {
@@ -42,33 +42,43 @@ func init() {
 }
 
 func main() {
-	finished := false
-	pageCount := 1
+	pageCount := 0
 	defer writer.Close()
 
-	for finished == false {
-		fromTime, _ := time.Parse(defaultTimeLayout, *from)
-		toTime, _ := time.Parse(defaultTimeLayout, *to)
-		result, err := publications.FetchPublicationsPage(client, rows, fromTime, toTime)
-		internal.Check(err)
+	startDate, _ := time.Parse(defaultTimeLayout, *start)
+	endDate, _ := time.Parse(defaultTimeLayout, *end)
 
-		if result == (publications.FetchedPublicationPage{}) {
-			finished = true
-			log.WithField("fetched_pages", pageCount).Info("finished fetching pages")
-			os.Exit(0)
+	oneDayUnix := int64(86400) // a day in seconds.
+	startDateUnix := startDate.Unix()
+	endDateUnix := endDate.Unix()
+
+	for timestamp := startDateUnix; timestamp <= endDateUnix; timestamp += oneDayUnix {
+		rows := defaultRows
+		for {
+			day := time.Unix(timestamp, 0)
+			if false == publications.PublicationPageExists(client, rows, day) {
+				log.WithField("pageCount", pageCount).WithField("date", day.Format(defaultTimeLayout)).Info("finished fetching day")
+				break
+			}
+
+			result, err := publications.FetchPublicationsPage(client, rows, day)
+			internal.Check(err)
+
+			b, err := json.Marshal(result)
+			internal.Check(err)
+
+			err = writer.WriteMessages(
+				context.Background(),
+				kafka.Message{Value: b},
+			)
+			internal.Check(err)
+
+			rows = rows + 30
+			pageCount = pageCount + 1
+			log.Debug(fmt.Sprintf("proceeding to row number %d", rows))
 		}
-
-		b, err := json.Marshal(result)
-		internal.Check(err)
-
-		err = writer.WriteMessages(
-			context.Background(),
-			kafka.Message{Value: b},
-		)
-		internal.Check(err)
-
-		rows = rows + 30
-		pageCount = pageCount + 1
-		log.Debug(fmt.Sprintf("proceeding to row number %d", rows))
 	}
+
+	log.Info("finished fetching date range")
+	os.Exit(0)
 }

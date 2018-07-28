@@ -85,4 +85,5 @@ func main() {
 	}
 
 	log.WithField("count", count).Info(fmt.Sprintf("Finished processing queue: added %d records", count))
+	os.Exit(0)
 }
