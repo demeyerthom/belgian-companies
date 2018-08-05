@@ -16,7 +16,7 @@ import (
 var (
 	publicationTopic = kingpin.Flag("publication-topic", "the kafka publication topic").Default("publications").String()
 	kafkaBrokers     = kingpin.Flag("brokers", "which kafka brokers to use").Default("localhost:9092").Strings()
-	consumerId       = kingpin.Flag("consumer-group-id", "the group id for the consumer").Default("").String()
+	consumerId       = kingpin.Flag("consumer-group-id", "the group id for the consumer").Default("push-publications").String()
 	mongoUrl         = kingpin.Flag("mongo-url", "the mongo database url").Default("localhost:27017").String()
 	database         = kingpin.Flag("database", "the mongo database").Default("belgian-companies").String()
 	collection       = kingpin.Flag("collection", " the mongo collection").Default("publications").String()

@@ -10,17 +10,18 @@ import (
 
 var URL_TEMPLATE = "https://kbopub.economie.fgov.be/kbopub/toonondernemingps.html?ondernemingsnummer=%s"
 
-type FetchedCompanyPage struct {
-	Version     string
-	Raw         string
-	DateFetched time.Time
-	OriginalUrl string
+type CompanyPage struct {
+	Version       string
+	Raw           string
+	DossierNumber string
+	DateFetched   time.Time
+	OriginalUrl   string
 }
 
-func FetchCompanyPage(companyId string) (page FetchedCompanyPage, err error) {
-	url := fmt.Sprintf(URL_TEMPLATE, companyId)
+func FetchCompanyPage(client *http.Client, dossierNumber string) (page CompanyPage, err error) {
+	url := fmt.Sprintf(URL_TEMPLATE, dossierNumber)
 
-	resp, err := http.Get(url)
+	resp, err := client.Get(url)
 	if err != nil {
 		panic(err)
 	}

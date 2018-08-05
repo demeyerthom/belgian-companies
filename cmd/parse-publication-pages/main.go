@@ -16,7 +16,7 @@ var (
 	inputTopic    = kingpin.Flag("input-topic", "the kafka input topic").Default("publication-pages").String()
 	outputTopic   = kingpin.Flag("output-topic", "the kafka output topic").Default("publications").String()
 	kafkaBrokers  = kingpin.Flag("brokers", "which kafka brokers to use").Default("localhost:9092").Strings()
-	consumerId    = kingpin.Flag("consumer-group-id", "the group id for the consumer").Default("").String()
+	consumerId    = kingpin.Flag("consumer-group-id", "the group id for the consumer").Default("parse-publications").String()
 	withDocuments = kingpin.Flag("documents", "whether to fetch publications with documents").Bool()
 	documentPath  = kingpin.Flag("document-path", "the absolute location to download the documents to").Default("/tmp").String()
 	rootUrl       = "http://www.ejustice.just.fgov.be"

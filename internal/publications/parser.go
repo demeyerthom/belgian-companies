@@ -7,6 +7,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/grokify/html-strip-tags-go"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -47,11 +48,17 @@ func parseNode(node goquery.Selection) (publication Publication, err error) {
 		return publication, errors.New(fmt.Sprintf("invalid number of elements: %d", len(elements)))
 	}
 
+	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
+	if err != nil {
+		log.Fatal(err)
+	}
+	dossierNumber := reg.ReplaceAllString(elements[2], "")
+
 	publication = Publication{}
 	publication.CompanyName = strings.TrimSpace(companyName.Text())
 	publication.FileLocation = documentLink
 	publication.Address = strings.TrimSpace(elements[1])
-	publication.DossierNumber = strings.TrimSpace(elements[2])
+	publication.DossierNumber = dossierNumber
 	publication.Type = strings.TrimSpace(elements[3])
 	publication.Raw = text
 
