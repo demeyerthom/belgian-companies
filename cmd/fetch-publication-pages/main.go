@@ -53,7 +53,7 @@ func init() {
 		Balancer: &kafka.LeastBytes{},
 	})
 
-	client = http_proxy.NewProxyClient()
+	client = http_proxy.NewTorClient()
 
 	crons = cron.New()
 }

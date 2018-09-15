@@ -7,7 +7,7 @@ import (
 	"net/url"
 )
 
-func NewProxyClient() *http.Client {
+func NewTorClient() *http.Client {
 	tbProxyURL, err := url.Parse("socks5://127.0.0.1:9050")
 	errors.Check(err)
 
