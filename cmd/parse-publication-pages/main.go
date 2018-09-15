@@ -15,19 +15,19 @@ import (
 )
 
 var (
-	inputTopic    = kingpin.Flag("input-topic", "the kafka input topic").Default("publication-pages").String()
-	outputTopic   = kingpin.Flag("output-topic", "the kafka output topic").Default("publications").String()
-	kafkaBrokers  = kingpin.Flag("brokers", "which kafka brokers to use").Default("localhost:9092").Strings()
-	consumerId    = kingpin.Flag("consumer-group-id", "the group id for the consumer").Default("parse-publications").String()
-	withDocuments = kingpin.Flag("documents", "whether to fetch publications with documents").Bool()
-	documentPath  = kingpin.Flag("document-path", "the location to download the documents to").Default("/tmp").String()
+	inputTopic    = kingpin.Flag("input-topic", "the kafka input topic").Envar("KAFKA_INPUT_TOPIC").Default("publication-pages").String()
+	outputTopic   = kingpin.Flag("output-topic", "the kafka output topic").Envar("KAFKA_OUTPUT_TOPIC").Default("publications").String()
+	kafkaBrokers  = kingpin.Flag("brokers", "which kafka brokers to use").Envar("KAFKA_BROKERS").Default("localhost:9092").Strings()
+	consumerId    = kingpin.Flag("consumer-group-id", "the group id for the consumer").Envar("KAFKA_CONSUMER_ID").Default("parse-publications").String()
+	withDocuments = kingpin.Flag("documents", "whether to fetch publications with documents").Envar("WITH_DOCUMENTS").Bool()
+	documentPath  = kingpin.Flag("document-path", "the location to download the documents to").Envar("DOCUMENT_PATH").Default("/tmp").String()
 	rootUrl       = "http://www.ejustice.just.fgov.be"
 	reader        *kafka.Reader
 	writer        *kafka.Writer
 	crons         *cron.Cron
 	logHandler    *os.File
-	cronSpec      = kingpin.Flag("cron", "the cron specification to run").Default("0 5 * * *").String()
-	logFile       = kingpin.Flag("log-file", "the log file to write to").Default("/var/log/belgian-companies/parse-publication-pages.log").String()
+	cronSpec      = kingpin.Flag("cron", "the cron specification to run").Envar("CRON_SPEC").Default("0 5 * * *").String()
+	logFile       = kingpin.Flag("log-file", "the log file to write to").Envar("LOG_FILE").Default("/var/log/belgian-companies/parse-publication-pages.log").String()
 )
 
 func init() {

@@ -23,12 +23,12 @@ var (
 	client            *http.Client
 	crons             *cron.Cron
 	logHandler        *os.File
-	topic             = kingpin.Flag("topic", "the Kafka topic to write to").Default("publication-pages").String()
-	kafkaBrokers      = kingpin.Flag("brokers", "which kafka brokers to use").Default("localhost:9092").Strings()
-	start             = kingpin.Flag("start", "the day from which to count").Default(time.Now().AddDate(0, 0, -1).Format(defaultTimeLayout)).String()
-	end               = kingpin.Flag("end", "the day unti which to process").Default(time.Now().AddDate(0, 0, -1).Format(defaultTimeLayout)).String()
-	cronSpec          = kingpin.Flag("cron", "the cron specification to run").Default("0 4 * * *").String()
-	logFile           = kingpin.Flag("log-file", "the log file to write to").Default("/var/log/belgian-companies/fetch-publication-pages.log").String()
+	topic             = kingpin.Flag("topic", "the Kafka topic to write to").Envar("KAFKA_TOPIC").Default("publication-pages").String()
+	kafkaBrokers      = kingpin.Flag("brokers", "which kafka brokers to use").Envar("KAFKA_BROKERS").Default("localhost:9092").Strings()
+	start             = kingpin.Flag("start", "the day from which to count").Envar("DATE_START").Default(time.Now().AddDate(0, 0, -1).Format(defaultTimeLayout)).String()
+	end               = kingpin.Flag("end", "the day unti which to process").Envar("DATE_END").Default(time.Now().AddDate(0, 0, -1).Format(defaultTimeLayout)).String()
+	cronSpec          = kingpin.Flag("cron", "the cron specification to run").Envar("CRON_SPEC").Default("0 4 * * *").String()
+	logFile           = kingpin.Flag("log-file", "the log file to write to").Envar("LOG_FILE").Default("/var/log/belgian-companies/fetch-publication-pages.log").String()
 )
 
 func init() {

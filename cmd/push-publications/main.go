@@ -16,18 +16,18 @@ import (
 )
 
 var (
-	publicationTopic = kingpin.Flag("publication-topic", "the kafka publication topic").Default("publications").String()
-	kafkaBrokers     = kingpin.Flag("brokers", "which kafka brokers to use").Default("localhost:9092").Strings()
-	consumerId       = kingpin.Flag("consumer-group-id", "the group id for the consumer").Default("push-publications").String()
-	mongoUrl         = kingpin.Flag("mongo-url", "the mongo database url").Default("localhost:27017").String()
-	database         = kingpin.Flag("database", "the mongo database").Default("belgian-companies").String()
-	collection       = kingpin.Flag("collection", " the mongo collection").Default("publications").String()
+	publicationTopic = kingpin.Flag("publication-topic", "the kafka publication topic").Envar("KAFKA_TOPIC").Default("publications").String()
+	kafkaBrokers     = kingpin.Flag("brokers", "which kafka brokers to use").Envar("KAFKA_BROKERS").Default("localhost:9092").Strings()
+	consumerId       = kingpin.Flag("consumer-group-id", "the group id for the consumer").Envar("KAFKA_CONSUMER_ID").Default("push-publications").String()
+	mongoUrl         = kingpin.Flag("mongo-url", "the mongo database url").Envar("MONGO_URL").Default("localhost:27017").String()
+	database         = kingpin.Flag("database", "the mongo database").Envar("MONGO_DATABASE").Default("belgian-companies").String()
+	collection       = kingpin.Flag("collection", " the mongo collection").Envar("MONGO_COLLECTION").Default("publications").String()
 	reader           *kafka.Reader
 	session          *mgo.Session
 	crons            *cron.Cron
 	logHandler       *os.File
-	cronSpec         = kingpin.Flag("cron", "the cron specification to run").Default("0 6 * * *").String()
-	logFile          = kingpin.Flag("log-file", "the log file to write to").Default("/var/log/belgian-companies/push-publications.log").String()
+	cronSpec         = kingpin.Flag("cron", "the cron specification to run").Envar("CRON_SPEC").Default("0 6 * * *").String()
+	logFile          = kingpin.Flag("log-file", "the log file to write to").Envar("LOG_FILE").Default("/var/log/belgian-companies/push-publications.log").String()
 )
 
 func init() {
