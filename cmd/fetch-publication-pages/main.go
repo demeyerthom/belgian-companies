@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/alecthomas/kingpin"
-	"github.com/demeyerthom/belgian-companies/pkg"
+	"github.com/demeyerthom/belgian-companies/pkg/errors"
+	"github.com/demeyerthom/belgian-companies/pkg/http-proxy"
 	"github.com/demeyerthom/belgian-companies/pkg/publications"
 	"github.com/robfig/cron"
 	"github.com/segmentio/kafka-go"
@@ -19,7 +19,6 @@ import (
 
 var (
 	defaultTimeLayout = "2006-01-02"
-	defaultRows       = 1
 	writer            *kafka.Writer
 	client            *http.Client
 	crons             *cron.Cron
@@ -42,7 +41,7 @@ func init() {
 	}
 
 	logHandler, err = os.OpenFile(*logFile, os.O_APPEND|os.O_WRONLY, 0600)
-	pkg.Check(err)
+	errors.Check(err)
 
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(logHandler)
@@ -54,7 +53,7 @@ func init() {
 		Balancer: &kafka.LeastBytes{},
 	})
 
-	client = pkg.NewProxyClient()
+	client = http_proxy.NewProxyClient()
 
 	crons = cron.New()
 }
@@ -71,20 +70,21 @@ func main() {
 		crons.Stop()
 		log.Info("closed cron")
 
-		log.Info("fetch-publication-pages has terminated")
+		log.Info("terminated")
 		logHandler.Close()
 		os.Exit(0)
 	}()
 
 	crons.Start()
 	crons.AddFunc(*cronSpec, fetchPublicationPages)
-	log.Info("fetch-publication-pages has started")
+	log.Info("started")
 
 	select {}
 }
 
 func fetchPublicationPages() {
-	pageCount := 0
+	var defaultRows = 1
+	var pageCount = 0
 	startDate, _ := time.Parse(defaultTimeLayout, *start)
 	endDate, _ := time.Parse(defaultTimeLayout, *end)
 
@@ -97,27 +97,24 @@ func fetchPublicationPages() {
 		for {
 			day := time.Unix(timestamp, 0)
 			if false == publications.PublicationPageExists(client, rows, day) {
-				log.WithField("pageCount", pageCount).WithField("date", day.Format(defaultTimeLayout)).Info("finished fetching day")
+				log.Infof("finished fetching day `%s`. Fetched `%d` pages", day.Format(defaultTimeLayout), pageCount)
 				break
 			}
 
 			result, err := publications.FetchPublicationsPage(client, rows, day)
-			pkg.Check(err)
+			errors.Check(err)
 
 			b, err := json.Marshal(result)
-			pkg.Check(err)
+			errors.Check(err)
 
-			err = writer.WriteMessages(
-				context.Background(),
-				kafka.Message{Value: b},
-			)
-			pkg.Check(err)
+			err = writer.WriteMessages(context.Background(), kafka.Message{Value: b})
+			errors.Check(err)
 
 			rows = rows + 30
 			pageCount = pageCount + 1
-			log.Debug(fmt.Sprintf("proceeding to row number %d", rows))
+			log.Debugf("proceeding to row number %d", rows)
 		}
 	}
 
-	log.Info("finished fetching date range")
+	log.Infof("finished fetching date range `%s` to `%s`. Fetched `%d` pages", *start, *end, pageCount)
 }

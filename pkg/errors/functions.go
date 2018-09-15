@@ -1,4 +1,4 @@
-package pkg
+package errors
 
 import (
 	log "github.com/sirupsen/logrus"

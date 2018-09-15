@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/alecthomas/kingpin"
-	"github.com/demeyerthom/belgian-companies/pkg"
+	"github.com/demeyerthom/belgian-companies/pkg/errors"
 	"github.com/demeyerthom/belgian-companies/pkg/publications"
 	"github.com/robfig/cron"
 	"github.com/segmentio/kafka-go"
@@ -39,7 +39,7 @@ func init() {
 	}
 
 	logHandler, err = os.OpenFile(*logFile, os.O_APPEND|os.O_WRONLY, 0600)
-	pkg.Check(err)
+	errors.Check(err)
 
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(logHandler)
@@ -52,7 +52,7 @@ func init() {
 	})
 
 	session, err = mgo.Dial(*mongoUrl)
-	pkg.Check(err)
+	errors.Check(err)
 
 	crons = cron.New()
 }
@@ -72,14 +72,14 @@ func main() {
 		crons.Stop()
 		log.Info("closed cron")
 
-		log.Info("push-publications has terminated")
+		log.Info("terminated")
 		logHandler.Close()
 		os.Exit(0)
 	}()
 
 	crons.Start()
 	crons.AddFunc(*cronSpec, pushPublications)
-	log.Info("push-publications has started")
+	log.Info("started")
 
 	select {}
 }
@@ -92,7 +92,7 @@ func pushPublications() {
 	for {
 		log.Debug("reading new publication")
 		m, err := reader.ReadMessage(context.Background())
-		pkg.Check(err)
+		errors.Check(err)
 
 		if m.Value == nil {
 			break
@@ -100,14 +100,14 @@ func pushPublications() {
 
 		publication := publications.Publication{}
 		err = json.Unmarshal(m.Value, &publication)
-		pkg.Check(err)
+		errors.Check(err)
 
 		err = db.C(*collection).Insert(publication)
-		pkg.Check(err)
+		errors.Check(err)
 
 		count = count + 1
 		log.WithField("publication", publication).WithField("count", count).Debug("wrote new publication")
 	}
 
-	log.Infof("Finished processing queue: added %d publications")
+	log.Infof("Finished processing queue: added %d publications", count)
 }

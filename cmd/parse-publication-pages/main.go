@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/alecthomas/kingpin"
-	"github.com/demeyerthom/belgian-companies/pkg"
+	"github.com/demeyerthom/belgian-companies/pkg/errors"
 	"github.com/demeyerthom/belgian-companies/pkg/publications"
 	"github.com/robfig/cron"
 	"github.com/segmentio/kafka-go"
@@ -39,7 +39,7 @@ func init() {
 	}
 
 	logHandler, err = os.OpenFile(*logFile, os.O_APPEND|os.O_WRONLY, 0600)
-	pkg.Check(err)
+	errors.Check(err)
 
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(logHandler)
@@ -75,14 +75,14 @@ func main() {
 		crons.Stop()
 		log.Info("closed cron")
 
-		log.Info("parse-publication-pages has terminated")
+		log.Info("terminated")
 		logHandler.Close()
 		os.Exit(0)
 	}()
 
 	crons.Start()
 	crons.AddFunc(*cronSpec, parsePublicationPages)
-	log.Info("parse-publication-pages has started")
+	log.Info("started")
 
 	select {}
 
@@ -94,7 +94,7 @@ func parsePublicationPages() {
 	for {
 		log.Debug("fetching next message")
 		m, err := reader.ReadMessage(context.Background())
-		pkg.Check(err)
+		errors.Check(err)
 
 		if m.Value == nil {
 			break
@@ -102,21 +102,21 @@ func parsePublicationPages() {
 
 		publicationPage := publications.FetchedPublicationPage{}
 		err = json.Unmarshal(m.Value, &publicationPage)
-		pkg.Check(err)
+		errors.Check(err)
 
 		newPublications, err := publications.ParsePublicationPage([]byte(publicationPage.Raw))
-		pkg.Check(err)
+		errors.Check(err)
 
 		for _, publication := range newPublications {
 			b, err := json.Marshal(publication)
-			pkg.Check(err)
+			errors.Check(err)
 
 			err = writer.WriteMessages(context.Background(), kafka.Message{Value: b})
-			pkg.Check(err)
+			errors.Check(err)
 
 			if *withDocuments {
 				err = publications.DownloadFile(*documentPath+publication.FileLocation, rootUrl+publication.FileLocation)
-				pkg.Check(err)
+				errors.Check(err)
 			}
 
 			count = count + 1
