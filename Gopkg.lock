@@ -41,6 +41,12 @@
   revision = "3f8856873ce5730282807732a0413fcf7c98cc58"
 
 [[projects]]
+  name = "github.com/robfig/cron"
+  packages = ["."]
+  revision = "b41be1df696709bb6395fe435af20370037c0b4c"
+  version = "v1.1"
+
+[[projects]]
   branch = "master"
   name = "github.com/segmentio/kafka-go"
   packages = ["."]
@@ -93,6 +99,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "993a3ae221436d567ff50ebace630d261811b48bf908aa4a5664b782a0c84ee6"
+  inputs-digest = "73d5e077d3f41918e736eb4a2ed8ac957e1dda68fd56247dfbe272f267806800"
   solver-name = "gps-cdcl"
   solver-version = 1

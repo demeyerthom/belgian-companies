@@ -1,4 +1,4 @@
-package internal
+package pkg
 
 import (
 	"golang.org/x/net/proxy"

@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/alecthomas/kingpin"
-	"github.com/demeyerthom/belgian-companies/internal"
-	"github.com/demeyerthom/belgian-companies/internal/publications"
+	"github.com/demeyerthom/belgian-companies/pkg"
+	"github.com/demeyerthom/belgian-companies/pkg/publications"
+	"github.com/robfig/cron"
 	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -19,17 +22,30 @@ var (
 	defaultRows       = 1
 	writer            *kafka.Writer
 	client            *http.Client
+	crons             *cron.Cron
+	logHandler        *os.File
 	topic             = kingpin.Flag("topic", "the Kafka topic to write to").Default("publication-pages").String()
 	kafkaBrokers      = kingpin.Flag("brokers", "which kafka brokers to use").Default("localhost:9092").Strings()
 	start             = kingpin.Flag("start", "the day from which to count").Default(time.Now().AddDate(0, 0, -1).Format(defaultTimeLayout)).String()
 	end               = kingpin.Flag("end", "the day unti which to process").Default(time.Now().AddDate(0, 0, -1).Format(defaultTimeLayout)).String()
+	cronSpec          = kingpin.Flag("cron", "the cron specification to run").Default("0 4 * * *").String()
+	logFile           = kingpin.Flag("log-file", "the log file to write to").Default("/var/log/belgian-companies/fetch-publication-pages.log").String()
 )
 
 func init() {
 	kingpin.Parse()
 
+	var err error
+
+	if _, err := os.Stat(*logFile); os.IsNotExist(err) {
+		os.Create(*logFile)
+	}
+
+	logHandler, err = os.OpenFile(*logFile, os.O_APPEND|os.O_WRONLY, 0600)
+	pkg.Check(err)
+
 	log.SetFormatter(&log.JSONFormatter{})
-	log.SetOutput(os.Stdout)
+	log.SetOutput(logHandler)
 	log.SetLevel(log.DebugLevel)
 
 	writer = kafka.NewWriter(kafka.WriterConfig{
@@ -38,17 +54,41 @@ func init() {
 		Balancer: &kafka.LeastBytes{},
 	})
 
-	client = internal.NewProxyClient()
+	client = pkg.NewProxyClient()
+
+	crons = cron.New()
 }
 
 func main() {
-	pageCount := 0
-	defer writer.Close()
+	c := make(chan os.Signal, 3)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
+	go func() {
+		<-c
 
+		writer.Close()
+		log.Info("closed kafka writer")
+
+		crons.Stop()
+		log.Info("closed cron")
+
+		log.Info("fetch-publication-pages has terminated")
+		logHandler.Close()
+		os.Exit(0)
+	}()
+
+	crons.Start()
+	crons.AddFunc(*cronSpec, fetchPublicationPages)
+	log.Info("fetch-publication-pages has started")
+
+	select {}
+}
+
+func fetchPublicationPages() {
+	pageCount := 0
 	startDate, _ := time.Parse(defaultTimeLayout, *start)
 	endDate, _ := time.Parse(defaultTimeLayout, *end)
 
-	oneDayUnix := int64(86400) // a day in seconds.
+	oneDayUnix := int64(86400)
 	startDateUnix := startDate.Unix()
 	endDateUnix := endDate.Unix()
 
@@ -62,16 +102,16 @@ func main() {
 			}
 
 			result, err := publications.FetchPublicationsPage(client, rows, day)
-			internal.Check(err)
+			pkg.Check(err)
 
 			b, err := json.Marshal(result)
-			internal.Check(err)
+			pkg.Check(err)
 
 			err = writer.WriteMessages(
 				context.Background(),
 				kafka.Message{Value: b},
 			)
-			internal.Check(err)
+			pkg.Check(err)
 
 			rows = rows + 30
 			pageCount = pageCount + 1
@@ -80,5 +120,4 @@ func main() {
 	}
 
 	log.Info("finished fetching date range")
-	os.Exit(0)
 }
