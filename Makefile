@@ -2,7 +2,7 @@
 env: ## Create testing environment
 	@docker-compose up -d
 
-dep: ## Ensure dependencies
+dependencies: ## Ensure dependencies
 	@go get -u golang.org/x/lint/golint
 	@dep ensure -vendor-only
 
