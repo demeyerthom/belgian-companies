@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/grokify/html-strip-tags-go"
+	log "github.com/sirupsen/logrus"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -54,7 +54,7 @@ func parseNode(node goquery.Selection) (publication Publication, err error) {
 	}
 	dossierNumber := reg.ReplaceAllString(elements[2], "")
 
-	publication = Publication{}
+	publication = NewPublication()
 	publication.CompanyName = strings.TrimSpace(companyName.Text())
 	publication.FileLocation = documentLink
 	publication.Address = strings.TrimSpace(elements[1])

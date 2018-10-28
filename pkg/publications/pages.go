@@ -3,6 +3,7 @@ package publications
 import (
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -31,6 +32,7 @@ func PublicationPageExists(client *http.Client, row int, day time.Time) bool {
 
 	resp, err := client.Get(url)
 	if err != nil {
+		log.WithError(err).Errorf("An error occurred while performing an http request: %s", err)
 		return false
 	}
 	defer resp.Body.Close()
@@ -42,11 +44,7 @@ func PublicationPageExists(client *http.Client, row int, day time.Time) bool {
 	body, _ := ioutil.ReadAll(resp.Body)
 	raw := string(body[:])
 
-	if !strings.Contains(raw, "table") {
-		return false
-	}
-
-	if strings.Contains(raw, "Einde van de lijst") {
+	if !strings.Contains(raw, "table") || strings.Contains(raw, "Einde van de lijst") {
 		return false
 	}
 
@@ -73,6 +71,8 @@ func FetchPublicationsPage(client *http.Client, row int, day time.Time) (result 
 	result.OriginalUrl = url
 	result.DateAdded = time.Now()
 	result.Version = 1
+
+	log.WithField("result", result).Debugf("returning result for url: %s", url)
 
 	return result, err
 }

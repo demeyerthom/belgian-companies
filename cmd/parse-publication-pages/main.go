@@ -4,125 +4,94 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/alecthomas/kingpin"
-	"github.com/demeyerthom/belgian-companies/pkg/errors"
 	"github.com/demeyerthom/belgian-companies/pkg/publications"
-	"github.com/robfig/cron"
+	"github.com/demeyerthom/belgian-companies/pkg/utils"
+	"github.com/olivere/elastic"
 	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
-	"os"
-	"os/signal"
-	"syscall"
+	"gopkg.in/sohlich/elogrus.v3"
 )
 
 var (
-	inputTopic    = kingpin.Flag("input-topic", "the kafka input topic").Envar("KAFKA_INPUT_TOPIC").Default("publication-pages").String()
-	outputTopic   = kingpin.Flag("output-topic", "the kafka output topic").Envar("KAFKA_OUTPUT_TOPIC").Default("publications").String()
-	kafkaBrokers  = kingpin.Flag("brokers", "which kafka brokers to use").Envar("KAFKA_BROKERS").Default("localhost:9092").Strings()
-	consumerId    = kingpin.Flag("consumer-group-id", "the group id for the consumer").Envar("KAFKA_CONSUMER_ID").Default("parse-publications").String()
-	withDocuments = kingpin.Flag("documents", "whether to fetch publications with documents").Envar("WITH_DOCUMENTS").Bool()
-	documentPath  = kingpin.Flag("document-path", "the location to download the documents to").Envar("DOCUMENT_PATH").Default("/tmp").String()
-	rootUrl       = "http://www.ejustice.just.fgov.be"
+	// Resources
+	appName       = "parse-publication-pages"
+	rootURL       = "proxy://www.ejustice.just.fgov.be"
 	reader        *kafka.Reader
 	writer        *kafka.Writer
-	crons         *cron.Cron
-	logHandler    *os.File
-	cronSpec      = kingpin.Flag("cron", "the cron specification to run").Envar("CRON_SPEC").Default("0 5 * * *").String()
-	logFile       = kingpin.Flag("log-file", "the log file to write to").Envar("LOG_FILE").Default("/var/log/belgian-companies/parse-publication-pages.log").String()
+	elasticClient *elastic.Client
+
+	// Common flags
+	inputTopic      = kingpin.Flag("input-topic", "the kafka input topic").Default("publication-pages").String()
+	outputTopic     = kingpin.Flag("output-topic", "the kafka output topic").Default("publications").String()
+	kafkaBrokers    = kingpin.Flag("brokers", "which kafka brokers to use").Default("localhost:9092").Strings()
+	elasticEndpoint = kingpin.Flag("elastic-endpoint", "the Elasticsearch endpoint").Default("http://localhost:9200").String()
+	consumerID      = kingpin.Flag("consumer-group-id", "the group id for the consumer").Default("parse-publications-20181028").String()
+	withDocuments   = kingpin.Flag("documents", "whether to fetch publications with documents").Bool()
+	documentPath    = kingpin.Flag("document-path", "the location to download the documents to").Default("/tmp").String()
 )
 
 func init() {
 	kingpin.Parse()
 	var err error
 
-	if _, err := os.Stat(*logFile); os.IsNotExist(err) {
-		os.Create(*logFile)
-	}
-
-	logHandler, err = os.OpenFile(*logFile, os.O_APPEND|os.O_WRONLY, 0600)
-	errors.Check(err)
+	elasticClient, err = elastic.NewClient(elastic.SetURL(*elasticEndpoint))
+	utils.Check(err)
 
 	log.SetFormatter(&log.JSONFormatter{})
-	log.SetOutput(logHandler)
 	log.SetLevel(log.DebugLevel)
 
+	elasticHook, err := elogrus.NewElasticHook(elasticClient, "localhost", log.WarnLevel, "logs")
+	utils.Check(err)
+
+	log.AddHook(elasticHook)
+	log.AddHook(utils.NewApplicationHook(appName))
+
 	reader = kafka.NewReader(kafka.ReaderConfig{
-		Brokers: *kafkaBrokers,
-		GroupID: *consumerId,
-		Topic:   *inputTopic,
+		Brokers:     *kafkaBrokers,
+		GroupID:     *consumerID,
+		Topic:       *inputTopic,
+		Logger:      utils.NewWrappedLogger(),
+		ErrorLogger: utils.NewWrappedLogger(),
 	})
 
 	writer = kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  *kafkaBrokers,
 		Topic:    *outputTopic,
-		Balancer: &kafka.LeastBytes{},
+		Balancer: &kafka.Hash{},
 	})
-
-	crons = cron.New()
 }
 
 func main() {
-	c := make(chan os.Signal, 3)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
-	go func() {
-		<-c
-
-		writer.Close()
-		log.Info("closed kafka writer")
-
-		reader.Close()
-		log.Info("closed kafka reader")
-
-		crons.Stop()
-		log.Info("closed cron")
-
-		log.Info("terminated")
-		logHandler.Close()
-		os.Exit(0)
-	}()
-
-	crons.Start()
-	crons.AddFunc(*cronSpec, parsePublicationPages)
-	log.Info("started")
-
-	select {}
-
-}
-
-func parsePublicationPages() {
 	count := 0
 
 	for {
 		log.Debug("fetching next message")
-		m, err := reader.ReadMessage(context.Background())
-		errors.Check(err)
-
-		if m.Value == nil {
-			break
-		}
+		message, err := reader.FetchMessage(context.Background())
+		utils.Check(err)
 
 		publicationPage := publications.FetchedPublicationPage{}
-		err = json.Unmarshal(m.Value, &publicationPage)
-		errors.Check(err)
+		err = json.Unmarshal(message.Value, &publicationPage)
+		utils.Check(err)
 
 		newPublications, err := publications.ParsePublicationPage([]byte(publicationPage.Raw))
-		errors.Check(err)
+		utils.Check(err)
 
 		for _, publication := range newPublications {
 			b, err := json.Marshal(publication)
-			errors.Check(err)
+			utils.Check(err)
 
-			err = writer.WriteMessages(context.Background(), kafka.Message{Value: b})
-			errors.Check(err)
+			err = writer.WriteMessages(context.Background(), kafka.Message{Key: []byte(publication.ID), Value: b})
+			utils.Check(err)
 
 			if *withDocuments {
-				err = publications.DownloadFile(*documentPath+publication.FileLocation, rootUrl+publication.FileLocation)
-				errors.Check(err)
+				err = publications.DownloadFile(*documentPath+publication.FileLocation, rootURL+publication.FileLocation)
+				utils.Check(err)
 			}
 
 			count = count + 1
 			log.WithField("publication", publication).WithField("count", count).Debug("writing new publication")
 		}
-	}
 
-	log.Infof("Finished processing queue: added %d records", count)
+		reader.CommitMessages(context.Background(), message)
+	}
 }

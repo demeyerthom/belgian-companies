@@ -1,5 +1,0 @@
-FROM scratch
-
-COPY ./bin/parse-publication-pages /bin/parse-publication-pages
-
-ENTRYPOINT ["/bin/parse-publication-pages"]

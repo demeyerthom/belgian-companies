@@ -4,57 +4,52 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/alecthomas/kingpin"
-	"github.com/demeyerthom/belgian-companies/pkg/errors"
 	"github.com/demeyerthom/belgian-companies/pkg/publications"
-	"github.com/robfig/cron"
+	"github.com/demeyerthom/belgian-companies/pkg/utils"
+	"github.com/olivere/elastic"
 	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/mgo.v2"
+	"gopkg.in/sohlich/elogrus.v3"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 var (
-	publicationTopic = kingpin.Flag("publication-topic", "the kafka publication topic").Envar("KAFKA_TOPIC").Default("publications").String()
-	kafkaBrokers     = kingpin.Flag("brokers", "which kafka brokers to use").Envar("KAFKA_BROKERS").Default("localhost:9092").Strings()
-	consumerId       = kingpin.Flag("consumer-group-id", "the group id for the consumer").Envar("KAFKA_CONSUMER_ID").Default("push-publications").String()
-	mongoUrl         = kingpin.Flag("mongo-url", "the mongo database url").Envar("MONGO_URL").Default("localhost:27017").String()
-	database         = kingpin.Flag("database", "the mongo database").Envar("MONGO_DATABASE").Default("belgian-companies").String()
-	collection       = kingpin.Flag("collection", " the mongo collection").Envar("MONGO_COLLECTION").Default("publications").String()
-	reader           *kafka.Reader
-	session          *mgo.Session
-	crons            *cron.Cron
-	logHandler       *os.File
-	cronSpec         = kingpin.Flag("cron", "the cron specification to run").Envar("CRON_SPEC").Default("0 6 * * *").String()
-	logFile          = kingpin.Flag("log-file", "the log file to write to").Envar("LOG_FILE").Default("/var/log/belgian-companies/push-publications.log").String()
+	appName       = "push-publications"
+	reader        *kafka.Reader
+	elasticClient *elastic.Client
+
+	// Common flags
+	publicationTopic = kingpin.Flag("publications", "the kafka publication topic").Default("publications").String()
+	kafkaBrokers     = kingpin.Flag("brokers", "which kafka brokers to use").Default("localhost:9092").Strings()
+	consumerId       = kingpin.Flag("consumer-group-id", "the group id for the consumer").Default("push-publications-20181028").String()
+	elasticEndpoint  = kingpin.Flag("elastic-endpoint", "the Elasticsearch endpoint").Default("http://localhost:9200").String()
 )
 
 func init() {
 	kingpin.Parse()
 	var err error
 
-	if _, err := os.Stat(*logFile); os.IsNotExist(err) {
-		os.Create(*logFile)
-	}
-
-	logHandler, err = os.OpenFile(*logFile, os.O_APPEND|os.O_WRONLY, 0600)
-	errors.Check(err)
+	elasticClient, err = elastic.NewClient(elastic.SetURL(*elasticEndpoint))
+	utils.Check(err)
 
 	log.SetFormatter(&log.JSONFormatter{})
-	log.SetOutput(logHandler)
 	log.SetLevel(log.DebugLevel)
 
+	elasticHook, err := elogrus.NewElasticHook(elasticClient, "localhost", log.WarnLevel, "logs")
+	utils.Check(err)
+
+	log.AddHook(elasticHook)
+	log.AddHook(utils.NewApplicationHook(appName))
+
 	reader = kafka.NewReader(kafka.ReaderConfig{
-		Brokers: *kafkaBrokers,
-		GroupID: *consumerId,
-		Topic:   *publicationTopic,
+		Brokers:     *kafkaBrokers,
+		GroupID:     *consumerId,
+		Topic:       *publicationTopic,
+		Logger:      utils.NewWrappedLogger(),
+		ErrorLogger: utils.NewWrappedLogger(),
 	})
-
-	session, err = mgo.Dial(*mongoUrl)
-	errors.Check(err)
-
-	crons = cron.New()
 }
 
 func main() {
@@ -66,48 +61,27 @@ func main() {
 		reader.Close()
 		log.Info("closed kafka reader")
 
-		session.Close()
-		log.Infof("closed mongo session")
-
-		crons.Stop()
-		log.Info("closed cron")
-
-		log.Info("terminated")
-		logHandler.Close()
 		os.Exit(0)
 	}()
 
-	crons.Start()
-	crons.AddFunc(*cronSpec, pushPublications)
-	log.Info("started")
-
-	select {}
-}
-
-func pushPublications() {
-	db := session.DB(*database)
-
-	count := 0
-
 	for {
 		log.Debug("reading new publication")
-		m, err := reader.ReadMessage(context.Background())
-		errors.Check(err)
-
-		if m.Value == nil {
-			break
-		}
+		message, err := reader.FetchMessage(context.Background())
+		utils.Check(err)
 
 		publication := publications.Publication{}
-		err = json.Unmarshal(m.Value, &publication)
-		errors.Check(err)
+		err = json.Unmarshal(message.Value, &publication)
+		utils.Check(err)
 
-		err = db.C(*collection).Insert(publication)
-		errors.Check(err)
+		_, err = elasticClient.Index().
+			Index("publications").
+			Type("publication").
+			Id(publication.ID).
+			BodyJson(publication).
+			Do(context.Background())
+		utils.Check(err)
 
-		count = count + 1
-		log.WithField("publication", publication).WithField("count", count).Debug("wrote new publication")
+		log.WithField("publication", publication).Debug("wrote new publication")
+		reader.CommitMessages(context.Background(), message)
 	}
-
-	log.Infof("Finished processing queue: added %d publications", count)
 }

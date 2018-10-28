@@ -1,5 +1,0 @@
-FROM scratch
-
-COPY ./bin/push-publications /bin/push-publications
-
-ENTRYPOINT ["/bin/push-publications"]

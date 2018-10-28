@@ -41,6 +41,33 @@
   revision = "3f8856873ce5730282807732a0413fcf7c98cc58"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/mailru/easyjson"
+  packages = [
+    ".",
+    "buffer",
+    "jlexer",
+    "jwriter"
+  ]
+  revision = "60711f1a8329503b04e1c88535f419d0bb440bff"
+
+[[projects]]
+  name = "github.com/olivere/elastic"
+  packages = [
+    ".",
+    "config",
+    "uritemplates"
+  ]
+  revision = "425e5369a8f054f4f447f7c8ee1bf605f48425ab"
+  version = "v6.2.11"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
   name = "github.com/robfig/cron"
   packages = ["."]
   revision = "b41be1df696709bb6395fe435af20370037c0b4c"
@@ -51,6 +78,12 @@
   name = "github.com/segmentio/kafka-go"
   packages = ["."]
   revision = "5484e4ac8fd66924b59878c0410a1823a8833e69"
+
+[[projects]]
+  name = "github.com/segmentio/ksuid"
+  packages = ["."]
+  revision = "ffd9a8aaaf8f40792e055371eba06542348e991e"
+  version = "v1.0.2"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
@@ -85,20 +118,14 @@
   revision = "bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e"
 
 [[projects]]
-  branch = "v2"
-  name = "gopkg.in/mgo.v2"
-  packages = [
-    ".",
-    "bson",
-    "internal/json",
-    "internal/sasl",
-    "internal/scram"
-  ]
-  revision = "3f83fa5005286a7fe593b055f0d7771a7dce4655"
+  branch = "v3"
+  name = "gopkg.in/sohlich/elogrus.v3"
+  packages = ["."]
+  revision = "1fa29e2f2009c129693c7079e5f6361bfbd34080"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "73d5e077d3f41918e736eb4a2ed8ac957e1dda68fd56247dfbe272f267806800"
+  inputs-digest = "7abe5ce3347d53caa386a239a9228f25bb04d4caedb68a5f5d9e318e072e0e62"
   solver-name = "gps-cdcl"
   solver-version = 1

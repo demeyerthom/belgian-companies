@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var URL_TEMPLATE = "https://kbopub.economie.fgov.be/kbopub/toonondernemingps.html?ondernemingsnummer=%s"
+var urlTemplate = "https://kbopub.economie.fgov.be/kbopub/toonondernemingps.html?ondernemingsnummer=%s"
 
 type CompanyPage struct {
 	Version       string
@@ -19,7 +19,7 @@ type CompanyPage struct {
 }
 
 func FetchCompanyPage(client *http.Client, dossierNumber string) (page CompanyPage, err error) {
-	url := fmt.Sprintf(URL_TEMPLATE, dossierNumber)
+	url := fmt.Sprintf(urlTemplate, dossierNumber)
 
 	resp, err := client.Get(url)
 	if err != nil {
