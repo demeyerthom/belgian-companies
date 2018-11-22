@@ -74,6 +74,12 @@ func parseNode(node goquery.Selection) (publication *models.Publication, err err
 	legalForm := strip.StripTags(elements[0])
 	publication.LegalForm = strings.TrimSpace(strings.Replace(legalForm, companyName.Text(), "", 1))
 
+	if IsInvalidPublication(publication) {
+		html, _ := node.Html()
+		log.WithField("raw", html).Error("an invalid publication was parsed")
+		return publication, errors.New("an invalid publication was parsed")
+	}
+
 	return publication, nil
 }
 
