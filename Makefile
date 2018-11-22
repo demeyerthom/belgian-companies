@@ -8,7 +8,7 @@ dep: ## Ensure dependencies
 	@dep ensure -vendor-only
 
 models: ## Create models
-	@gogen-avro --package=models pkg/models schemas/publication.avsc schemas/publication_page.avsc
+	@gogen-avro --package=models pkg/models schemas/publication.avsc schemas/company.avsc
 
 lint:
 	golint pkg/* cmd/*

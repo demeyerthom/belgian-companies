@@ -1,0 +1,284 @@
+[
+  {
+    "namespace": "nl.demeyer.belgiancompanies.companies",
+    "type": "record",
+    "name": "Company",
+    "doc": "A Belgian company profile",
+    "fields": [
+      {
+        "name": "DossierNumber",
+        "type": "string",
+        "doc": "the dossier number"
+      },
+      {
+        "name": "Status",
+        "type": "string",
+        "doc": "the status"
+      },
+      {
+        "name": "LegalState",
+        "type": "string",
+        "doc": "the legal state"
+      },
+      {
+        "name": "StartDate",
+        "type": "string",
+        "doc": "the company start date"
+      },
+      {
+        "name": "LegalName",
+        "type": "string",
+        "doc": "the legal name"
+      },
+      {
+        "name": "PhoneNumber",
+        "type": "string",
+        "doc": "the phone number"
+      },
+      {
+        "name": "FaxNumber",
+        "type": "string",
+        "doc": "the fax number name"
+      },
+      {
+        "name": "WebAddress",
+        "type": "string",
+        "doc": "the web address"
+      },
+      {
+        "name": "EmailAddress",
+        "type": "string",
+        "doc": "the email address"
+      },
+      {
+        "name": "LegalType",
+        "type": "string",
+        "doc": "the legal type"
+      },
+      {
+        "name": "HeadOfficeAddress",
+        "type": "nl.demeyer.belgiancompanies.companies.Address",
+        "doc": "the legal name"
+      },
+      {
+        "name": "LegalFunctions",
+        "doc": "the legal functions",
+        "type": {
+          "type": "array",
+          "items": "nl.demeyer.belgiancompanies.companies.LegalFunction"
+        }
+      },
+      {
+        "name": "ProfessionalProofs",
+        "doc": "the professional proofs",
+        "type": {
+          "type": "array",
+          "items": "nl.demeyer.belgiancompanies.companies.ProfessionalProof"
+        }
+      },
+      {
+        "name": "Characteristics",
+        "doc": "the company characteristics",
+        "type": {
+          "type": "array",
+          "items": "nl.demeyer.belgiancompanies.companies.Characteristic"
+        }
+      },
+      {
+        "name": "Licences",
+        "doc": "the company licences",
+        "type": {
+          "type": "array",
+          "items": "nl.demeyer.belgiancompanies.companies.Licence"
+        }
+      },
+      {
+        "name": "NACECode",
+        "doc": "the NACE codes assigned",
+        "type": {
+          "type": "array",
+          "items": "nl.demeyer.belgiancompanies.companies.NACECode"
+        }
+      },
+      {
+        "name": "FinancialInformation",
+        "doc": "the financial information",
+        "type": "nl.demeyer.belgiancompanies.companies.FinancialInformation"
+      },
+      {
+        "name": "LinkedCompanies",
+        "doc": "linked companies",
+        "type": {
+          "type": "array",
+          "items": "string"
+        }
+      }
+    ]
+  },
+  {
+    "namespace": "nl.demeyer.belgiancompanies.companies",
+    "type": "record",
+    "name": "Address",
+    "doc": "An address",
+    "fields": [
+      {
+        "name": "Street",
+        "type": "string",
+        "doc": "the street"
+      },
+      {
+        "name": "Number",
+        "type": "int",
+        "doc": "the house number"
+      },
+      {
+        "name": "Place",
+        "type": "string",
+        "doc": "the place"
+      },
+      {
+        "name": "PostalCode",
+        "type": "int",
+        "doc": "the postal code"
+      }
+    ]
+  },
+  {
+    "namespace": "nl.demeyer.belgiancompanies.companies",
+    "type": "record",
+    "name": "LegalFunction",
+    "doc": "A legal function associated with the company",
+    "fields": [
+      {
+        "name": "Type",
+        "type": "string",
+        "doc": "the legal function type"
+      },
+      {
+        "name": "Name",
+        "type": "string",
+        "doc": "the name"
+      },
+      {
+        "name": "DateFrom",
+        "type": "string",
+        "doc": "the date from which the function was performed"
+      },
+      {
+        "name": "DossierNumber",
+        "type": "string",
+        "doc": "the dossier number related to the legal function"
+      }
+    ]
+  },
+  {
+    "namespace": "nl.demeyer.belgiancompanies.companies",
+    "type": "record",
+    "name": "ProfessionalProof",
+    "doc": "proof of professional skills and basic knowledge of enterprise governance",
+    "fields": [
+      {
+        "name": "Type",
+        "type": "string",
+        "doc": "the legal function type"
+      },
+      {
+        "name": "DateFrom",
+        "type": "string",
+        "doc": "the date from which the proof is valid"
+      }
+    ]
+  },
+  {
+    "namespace": "nl.demeyer.belgiancompanies.companies",
+    "type": "record",
+    "name": "Characteristic",
+    "doc": "company characteristics",
+    "fields": [
+      {
+        "name": "Text",
+        "type": "string",
+        "doc": "the characteristic text"
+      },
+      {
+        "name": "DateFrom",
+        "type": "string",
+        "doc": "the date from which the characteristic is valid"
+      }
+    ]
+  },
+  {
+    "namespace": "nl.demeyer.belgiancompanies.companies",
+    "type": "record",
+    "name": "Licence",
+    "doc": "company licences",
+    "fields": [
+      {
+        "name": "Text",
+        "type": "string",
+        "doc": "the licence text"
+      },
+      {
+        "name": "DateFrom",
+        "type": "string",
+        "doc": "the date from which the licence is valid"
+      }
+    ]
+  },
+  {
+    "namespace": "nl.demeyer.belgiancompanies.companies",
+    "type": "record",
+    "name": "NACECode",
+    "doc": "NACE codes",
+    "fields": [
+      {
+        "name": "Code",
+        "type": "string",
+        "doc": "the NACE code"
+      },
+      {
+        "name": "SpecifyingGroup",
+        "type": "string",
+        "doc": "the specifying group"
+      },
+      {
+        "name": "DateFrom",
+        "type": "string",
+        "doc": "the date from which the code is valid"
+      }
+    ]
+  },
+  {
+    "namespace": "nl.demeyer.belgiancompanies.companies",
+    "type": "record",
+    "name": "FinancialInformation",
+    "doc": "financial information for the company",
+    "fields": [
+      {
+        "name": "AuthorizedCapital",
+        "type": "string",
+        "doc": "the authorized capital"
+      },
+      {
+        "name": "AnnualAssembly",
+        "type": "string",
+        "doc": ""
+      },
+      {
+        "name": "EndDateFinancialYear",
+        "type": "string",
+        "doc": "the end date for the financial year"
+      },
+      {
+        "name": "StartDateExceptionalYear",
+        "type": "string",
+        "doc": "start date for the exceptional year"
+      },
+      {
+        "name": "EndDateExceptionalYear",
+        "type": "string",
+        "doc": "the end date for the exceptional year"
+      }
+    ]
+  }
+]
