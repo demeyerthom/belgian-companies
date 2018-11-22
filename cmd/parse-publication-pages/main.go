@@ -65,12 +65,11 @@ func main() {
 		newPublications, err := publications.ParsePublicationPage([]byte(publicationPage.Raw))
 		utils.Check(err)
 
+		var messages []kafka.Message
+
 		for _, publication := range newPublications {
 			var buf bytes.Buffer
 			err = publication.Serialize(&buf)
-			utils.Check(err)
-
-			err = writer.WriteMessages(context.Background(), kafka.Message{Value: buf.Bytes()})
 			utils.Check(err)
 
 			if *withDocuments {
@@ -78,10 +77,15 @@ func main() {
 				utils.Check(err)
 			}
 
+			messages = append(messages, kafka.Message{Value: buf.Bytes()})
+
 			count = count + 1
-			log.WithField("publication", publication).WithField("count", count).Debug("writing new publication")
+			log.WithField("publication", publication).Debug("writing new publication")
 		}
 
-		reader.CommitMessages(context.Background(), message)
+		err = writer.WriteMessages(context.Background(), messages...)
+		utils.Check(err)
+		err = reader.CommitMessages(context.Background(), message)
+		utils.Check(err)
 	}
 }

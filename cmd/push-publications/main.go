@@ -52,7 +52,7 @@ func main() {
 	go func() {
 		<-c
 
-		reader.Close()
+		_ = reader.Close()
 		log.Info("closed kafka reader")
 
 		os.Exit(0)
@@ -67,10 +67,6 @@ func main() {
 		publication, err := models.DeserializePublication(buf)
 		utils.Check(err)
 
-		if publication.DatePublication == "" {
-			publication.DatePublication = "2016-01-01"
-		}
-
 		_, err = elasticClient.Index().
 			Index("publications").
 			Type("publication").
@@ -79,6 +75,7 @@ func main() {
 		utils.Check(err)
 
 		log.WithField("publication", publication).Debug("wrote new publication")
-		reader.CommitMessages(context.Background(), message)
+		err = reader.CommitMessages(context.Background(), message)
+		utils.Check(err)
 	}
 }
