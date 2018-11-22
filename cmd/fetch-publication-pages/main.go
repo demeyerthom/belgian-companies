@@ -1,17 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 	"github.com/alecthomas/kingpin"
 	"github.com/demeyerthom/belgian-companies/pkg/proxy"
 	"github.com/demeyerthom/belgian-companies/pkg/publications"
 	"github.com/demeyerthom/belgian-companies/pkg/utils"
-	"github.com/olivere/elastic"
 	"github.com/robfig/cron"
 	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/sohlich/elogrus.v3"
 	"math/rand"
 	"net/http"
 	"os"
@@ -25,17 +23,15 @@ var (
 	appName           = "fetch-publication-pages"
 	defaultTimeLayout = "2006-01-02"
 	writer            *kafka.Writer
-	elasticClient     *elastic.Client
 	client            *http.Client
 	cronHandler       *cron.Cron
 	currentCommand    string
 
 	// Common flags
-	topic           = kingpin.Flag("topic", "the Kafka topic to write to").Default("publication-pages").String()
-	kafkaBrokers    = kingpin.Flag("brokers", "which kafka brokers to use").Default("localhost:9092").Strings()
-	elasticEndpoint = kingpin.Flag("elastic-endpoint", "the Elasticsearch endpoint").Default("http://localhost:9200").String()
-	proxyUrl        = kingpin.Flag("proxy-url", "the proxy url to route the request through").Default("socks5://127.0.0.1:9150").String()
-	sleep           = kingpin.Flag("sleep", "the max period to sleep after each request").Default("10").Int()
+	topic        = kingpin.Flag("topic", "the Kafka topic to write to").Default("publication-pages").String()
+	kafkaBrokers = kingpin.Flag("brokers", "which kafka brokers to use").Default("localhost:9092").Strings()
+	proxyUrl     = kingpin.Flag("proxy-url", "the proxy url to route the request through").Default("socks5://127.0.0.1:9150").String()
+	sleep        = kingpin.Flag("sleep", "the max period to sleep after each request").Default("10").Int()
 
 	// Daily runner
 	cronCommandName = "cron"
@@ -53,17 +49,11 @@ func init() {
 	currentCommand = kingpin.Parse()
 	var err error
 
-	elasticClient, err = elastic.NewClient(elastic.SetURL(*elasticEndpoint))
-	utils.Check(err)
-
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetLevel(log.DebugLevel)
-
-	hook, err := elogrus.NewElasticHook(elasticClient, "localhost", log.WarnLevel, "logs")
-	utils.Check(err)
-
-	log.AddHook(hook)
 	log.AddHook(utils.NewApplicationHook(appName))
+
+	utils.Check(err)
 
 	writer = kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  *kafkaBrokers,
@@ -134,10 +124,11 @@ func fetchPublicationPagesForDay(day time.Time) (pageCount int) {
 		result, err := publications.FetchPublicationsPage(client, rows, day)
 		utils.Check(err)
 
-		b, err := json.Marshal(result)
+		var buf bytes.Buffer
+		err = result.Serialize(&buf)
 		utils.Check(err)
 
-		err = writer.WriteMessages(context.Background(), kafka.Message{Value: b})
+		err = writer.WriteMessages(context.Background(), kafka.Message{Value: buf.Bytes()})
 		utils.Check(err)
 
 		rows = rows + 30

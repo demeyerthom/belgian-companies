@@ -1,15 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 	"github.com/alecthomas/kingpin"
-	"github.com/demeyerthom/belgian-companies/pkg/publications"
+	"github.com/demeyerthom/belgian-companies/pkg/models"
 	"github.com/demeyerthom/belgian-companies/pkg/utils"
 	"github.com/olivere/elastic"
 	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/sohlich/elogrus.v3"
 	"os"
 	"os/signal"
 	"syscall"
@@ -23,7 +22,7 @@ var (
 	// Common flags
 	publicationTopic = kingpin.Flag("publications", "the kafka publication topic").Default("publications").String()
 	kafkaBrokers     = kingpin.Flag("brokers", "which kafka brokers to use").Default("localhost:9092").Strings()
-	consumerId       = kingpin.Flag("consumer-group-id", "the group id for the consumer").Default("push-publications-20181028").String()
+	consumerId       = kingpin.Flag("consumer-group-id", "the group id for the consumer").Default("push-publications-elastic").String()
 	elasticEndpoint  = kingpin.Flag("elastic-endpoint", "the Elasticsearch endpoint").Default("http://localhost:9200").String()
 )
 
@@ -36,11 +35,6 @@ func init() {
 
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetLevel(log.DebugLevel)
-
-	elasticHook, err := elogrus.NewElasticHook(elasticClient, "localhost", log.WarnLevel, "logs")
-	utils.Check(err)
-
-	log.AddHook(elasticHook)
 	log.AddHook(utils.NewApplicationHook(appName))
 
 	reader = kafka.NewReader(kafka.ReaderConfig{
@@ -69,14 +63,17 @@ func main() {
 		message, err := reader.FetchMessage(context.Background())
 		utils.Check(err)
 
-		publication := publications.Publication{}
-		err = json.Unmarshal(message.Value, &publication)
+		buf := bytes.NewBuffer(message.Value)
+		publication, err := models.DeserializePublication(buf)
 		utils.Check(err)
+
+		if publication.DatePublication == "" {
+			publication.DatePublication = "2016-01-01"
+		}
 
 		_, err = elasticClient.Index().
 			Index("publications").
 			Type("publication").
-			Id(publication.ID).
 			BodyJson(publication).
 			Do(context.Background())
 		utils.Check(err)

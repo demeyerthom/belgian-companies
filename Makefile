@@ -2,9 +2,13 @@
 env: ## Create testing environment
 	docker-compose up -d
 
-dependencies: ## Ensure dependencies
-	/usr/local/go/bin/go get -u golang.org/x/lint/golint
-	/home/thomas/go/bin/dep ensure -vendor-only
+dep: ## Ensure dependencies
+	@go get -u golang.org/x/lint/golint
+	@go get -u github.com/actgardner/gogen-avro
+	@dep ensure -vendor-only
+
+models: ## Create models
+	@gogen-avro --package=models pkg/models schemas/publication.avsc schemas/publication_page.avsc
 
 lint:
 	golint pkg/* cmd/*

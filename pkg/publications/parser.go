@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/demeyerthom/belgian-companies/pkg/models"
 	"github.com/grokify/html-strip-tags-go"
 	log "github.com/sirupsen/logrus"
 	"io"
@@ -15,7 +16,7 @@ import (
 	"strings"
 )
 
-func ParsePublicationPage(result []byte) (publications []Publication, err error) {
+func ParsePublicationPage(result []byte) (publications []*models.Publication, err error) {
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(result))
 	if err != nil {
 		panic(err)
@@ -37,7 +38,7 @@ func ParsePublicationPage(result []byte) (publications []Publication, err error)
 	return publications, nil
 }
 
-func parseNode(node goquery.Selection) (publication Publication, err error) {
+func parseNode(node goquery.Selection) (publication *models.Publication, err error) {
 	companyName := node.Find("font[color=blue]")
 	documentLink, _ := node.Find("a").Attr("href")
 
@@ -54,7 +55,7 @@ func parseNode(node goquery.Selection) (publication Publication, err error) {
 	}
 	dossierNumber := reg.ReplaceAllString(elements[2], "")
 
-	publication = NewPublication()
+	publication = models.NewPublication()
 	publication.CompanyName = strings.TrimSpace(companyName.Text())
 	publication.FileLocation = documentLink
 	publication.Address = strings.TrimSpace(elements[1])

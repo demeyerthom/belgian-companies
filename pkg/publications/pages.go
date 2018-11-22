@@ -3,6 +3,7 @@ package publications
 import (
 	"errors"
 	"fmt"
+	"github.com/demeyerthom/belgian-companies/pkg/models"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
@@ -11,13 +12,6 @@ import (
 )
 
 var urlTemplate = "http://www.ejustice.just.fgov.be/cgi_tsv/tsv_l_1.pl?lang=nl&row_id=%d&pdda=%d&pddm=%d&pddj=%d&pdfa=%d&pdfm=%d&pdfj=%d&fromtab=TSV&sql=pd+between+date%%27%d-%d-%d%%27+and+date%%27%d-%d-%d%%27+"
-
-type FetchedPublicationPage struct {
-	Raw         string    `bson:"raw" json:"raw"`
-	DateAdded   time.Time `bson:"date_added" json:"date_added"`
-	OriginalUrl string    `bson:"original_url" json:"original_url"`
-	Version     int       `bson:"version" json:"version"`
-}
 
 func buildUrl(rowId int, period time.Time) string {
 	year := period.Year()
@@ -51,7 +45,7 @@ func PublicationPageExists(client *http.Client, row int, day time.Time) bool {
 	return true
 }
 
-func FetchPublicationsPage(client *http.Client, row int, day time.Time) (result FetchedPublicationPage, err error) {
+func FetchPublicationsPage(client *http.Client, row int, day time.Time) (result *models.PublicationPage, err error) {
 	url := buildUrl(row, day)
 
 	resp, err := client.Get(url)
@@ -67,10 +61,9 @@ func FetchPublicationsPage(client *http.Client, row int, day time.Time) (result 
 	body, _ := ioutil.ReadAll(resp.Body)
 	raw := string(body[:])
 
+	result = models.NewPublicationPage()
 	result.Raw = raw
 	result.OriginalUrl = url
-	result.DateAdded = time.Now()
-	result.Version = 1
 
 	log.WithField("result", result).Debugf("returning result for url: %s", url)
 
