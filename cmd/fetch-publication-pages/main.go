@@ -4,14 +4,11 @@ import (
 	"bytes"
 	"context"
 	"github.com/alecthomas/kingpin"
-	"github.com/demeyerthom/belgian-companies/pkg/proxy"
-	"github.com/demeyerthom/belgian-companies/pkg/publications"
-	"github.com/demeyerthom/belgian-companies/pkg/utils"
+	"github.com/demeyerthom/belgian-companies/pkg/fetcher"
+	"github.com/demeyerthom/belgian-companies/pkg/util"
 	"github.com/robfig/cron"
 	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
-	"math/rand"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,40 +17,37 @@ import (
 
 var (
 	// Resources
-	appName           = "fetch-publication-pages"
-	defaultTimeLayout = "2006-01-02"
-	writer            *kafka.Writer
-	client            *http.Client
-	cronHandler       *cron.Cron
-	currentCommand    string
+	appName            = "fetch-publication-pages"
+	defaultTimeLayout  = "2006-01-02"
+	writer             *kafka.Writer
+	publicationFetcher *fetcher.PublicationFetcher
+	cronHandler        *cron.Cron
+	currentCommand     string
 
 	// Common flags
-	topic        = kingpin.Flag("topic", "the Kafka topic to write to").Default("publication-pages").String()
-	kafkaBrokers = kingpin.Flag("brokers", "which kafka brokers to use").Default("localhost:9092").Strings()
-	proxyUrl     = kingpin.Flag("proxy-url", "the proxy url to route the request through").Default("socks5://127.0.0.1:9150").String()
-	sleep        = kingpin.Flag("sleep", "the max period to sleep after each request").Default("10").Int()
+	topic        = kingpin.Flag("topic", "the Kafka topic to write to").Envar("TOPIC").Default("publication-pages").String()
+	kafkaBrokers = kingpin.Flag("brokers", "which kafka brokers to use").Envar("BROKERS").Default("localhost:9092").Strings()
+	proxyUrl     = kingpin.Flag("proxy-url", "the proxy url to route the request through").Envar("PROXY_URL").Default("socks5://127.0.0.1:9150").String()
+	sleep        = kingpin.Flag("sleep", "the max period to sleep after each request").Envar("SLEEP").Default("10").Int()
 
 	// Daily runner
 	cronCommandName = "cron"
 	cronCommand     = kingpin.Command(cronCommandName, "run fetch publication pages on a continuous basis")
-	cronSpec        = cronCommand.Flag("cron-spec", "the cron specification to run").Default("0 4 * * *").String()
+	cronSpec        = cronCommand.Flag("cron-spec", "the cron specification to run").Envar("CRON_SPEC").Default("0 4 * * *").String()
 
 	// Defined range runner
 	rangeCommandName = "range"
 	rangeCommand     = kingpin.Command(rangeCommandName, "run fetch publication pages for a defined range")
-	start            = rangeCommand.Flag("start", "the day from which to start").Default(time.Now().AddDate(0, 0, -1).Format(defaultTimeLayout)).String()
-	end              = rangeCommand.Flag("end", "the day until which to process").Default(time.Now().AddDate(0, 0, -1).Format(defaultTimeLayout)).String()
+	start            = rangeCommand.Flag("start", "the day from which to start").Envar("START_DATE").Default(time.Now().AddDate(0, 0, -1).Format(defaultTimeLayout)).String()
+	end              = rangeCommand.Flag("end", "the day until which to process").Envar("END_DATE").Default(time.Now().AddDate(0, 0, -1).Format(defaultTimeLayout)).String()
 )
 
 func init() {
 	currentCommand = kingpin.Parse()
-	var err error
 
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetLevel(log.DebugLevel)
-	log.AddHook(utils.NewApplicationHook(appName))
-
-	utils.Check(err)
+	log.AddHook(util.NewApplicationHook(appName))
 
 	writer = kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  *kafkaBrokers,
@@ -61,7 +55,7 @@ func init() {
 		Balancer: &kafka.Hash{},
 	})
 
-	client = proxy.NewTorClient(*proxyUrl)
+	publicationFetcher = fetcher.NewPublicationFetcher(util.NewTorClient(*proxyUrl), *sleep)
 
 	cronHandler = cron.New()
 }
@@ -116,27 +110,23 @@ func fetchPublicationPagesForDay(day time.Time) (pageCount int) {
 	var rows = 1
 
 	for {
-		if false == publications.PublicationPageExists(client, rows, day) {
+		result, err := publicationFetcher.FetchPublicationsPage(rows, day)
+		util.Check(err)
+
+		if result == nil {
 			log.Infof("finished fetching day `%s`. Fetched `%d` pages", day.Format(defaultTimeLayout), pageCount)
 			return pageCount
 		}
 
-		result, err := publications.FetchPublicationsPage(client, rows, day)
-		utils.Check(err)
-
 		var buf bytes.Buffer
 		err = result.Serialize(&buf)
-		utils.Check(err)
+		util.Check(err)
 
 		err = writer.WriteMessages(context.Background(), kafka.Message{Value: buf.Bytes()})
-		utils.Check(err)
+		util.Check(err)
 
 		rows = rows + 30
 		pageCount = pageCount + 1
-
-		sleepTime := time.Duration(rand.Intn(*sleep)) * time.Second
-		log.Debugf("going to sleep: %d seconds", sleepTime/time.Second)
-		time.Sleep(sleepTime)
 
 		log.Debugf("proceeding to row number %d", rows)
 	}

@@ -6,6 +6,11 @@
     "doc": "A Belgian Handelsregister publication",
     "fields": [
       {
+        "name": "ID",
+        "type": "int",
+        "doc": "the publication id"
+      },
+      {
         "name": "DossierNumber",
         "type": "string",
         "doc": "the company dossier number"
@@ -14,11 +19,6 @@
         "name": "CompanyName",
         "type": "string",
         "doc": "the company name"
-      },
-      {
-        "name": "LegalForm",
-        "type": "string",
-        "doc": "the company legal form"
       },
       {
         "name": "Address",
@@ -36,9 +36,12 @@
         "doc": "the date of publication"
       },
       {
-        "name": "Type",
-        "type": "string",
-        "doc": "the publication type"
+        "name": "Subjects",
+        "type": {
+          "type": "array",
+          "items": "string"
+        },
+        "doc": "the publication subjects"
       },
       {
         "name": "Raw",

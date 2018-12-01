@@ -27,9 +27,8 @@
   version = "1.1.0"
 
 [[constraint]]
-  branch = "v3"
-  name = "gopkg.in/sohlich/elogrus.v3"
-
+  name = "github.com/stretchr/testify"
+  version = "1.2.2"
 [[constraint]]
-  name = "github.com/segmentio/ksuid"
-  version = "1.0.2"
+  name = "github.com/microcosm-cc/bluemonday"
+  version = "1.0.1"

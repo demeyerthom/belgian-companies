@@ -35,37 +35,22 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/grokify/html-strip-tags-go"
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
+
+[[projects]]
+  name = "github.com/microcosm-cc/bluemonday"
   packages = ["."]
-  revision = "3f8856873ce5730282807732a0413fcf7c98cc58"
+  revision = "82c7118e8ccf7403d4860175d97bb635e8e28239"
+  version = "v1.0.1"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/mailru/easyjson"
-  packages = [
-    ".",
-    "buffer",
-    "jlexer",
-    "jwriter"
-  ]
-  revision = "60711f1a8329503b04e1c88535f419d0bb440bff"
-
-[[projects]]
-  name = "github.com/olivere/elastic"
-  packages = [
-    ".",
-    "config",
-    "uritemplates"
-  ]
-  revision = "425e5369a8f054f4f447f7c8ee1bf605f48425ab"
-  version = "v6.2.11"
-
-[[projects]]
-  name = "github.com/pkg/errors"
-  packages = ["."]
-  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
-  version = "v0.8.0"
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/robfig/cron"
@@ -80,16 +65,25 @@
   revision = "5484e4ac8fd66924b59878c0410a1823a8833e69"
 
 [[projects]]
-  name = "github.com/segmentio/ksuid"
-  packages = ["."]
-  revision = "ffd9a8aaaf8f40792e055371eba06542348e991e"
-  version = "v1.0.2"
-
-[[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
   version = "v1.0.6"
+
+[[projects]]
+  name = "github.com/stretchr/objx"
+  packages = ["."]
+  revision = "477a77ecc69700c7cdeb1fa9e129548e1c1c393c"
+  version = "v0.1.1"
+
+[[projects]]
+  name = "github.com/stretchr/testify"
+  packages = [
+    "assert",
+    "mock"
+  ]
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
 
 [[projects]]
   branch = "master"
@@ -117,15 +111,9 @@
   ]
   revision = "bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e"
 
-[[projects]]
-  branch = "v3"
-  name = "gopkg.in/sohlich/elogrus.v3"
-  packages = ["."]
-  revision = "1fa29e2f2009c129693c7079e5f6361bfbd34080"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "150d4e92df9e95a7a689f7e2349061ab31185a6544c50142373cda46ab7dacaa"
+  inputs-digest = "a78b6de8803a803c0e8e39ce5befce17b25c85a5f43257060c0e491d2ab728fe"
   solver-name = "gps-cdcl"
   solver-version = 1

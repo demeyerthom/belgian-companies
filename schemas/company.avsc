@@ -11,6 +11,11 @@
         "doc": "the dossier number"
       },
       {
+        "name": "VATNumber",
+        "type": "string",
+        "doc": "the VAT number"
+      },
+      {
         "name": "Status",
         "type": "string",
         "doc": "the status"
@@ -278,6 +283,43 @@
         "name": "EndDateExceptionalYear",
         "type": "string",
         "doc": "the end date for the exceptional year"
+      }
+    ]
+  },
+  {
+    "namespace": "nl.demeyer.belgiancompanies.companies",
+    "type": "record",
+    "name": "CompanyPages",
+    "doc": "A page from the Belgian CBE database containing all pages related",
+    "fields": [
+      {
+        "name": "Pages",
+        "doc": "the fetched pages",
+        "type": {
+          "type": "array",
+          "items": {
+            "namespace": "nl.demeyer.belgiancompanies.companies",
+            "name": "CompanyPage",
+            "type": "record",
+            "fields": [
+              {
+                "name": "Type",
+                "type": "string",
+                "doc": "the page type"
+              },
+              {
+                "name": "OriginalUrl",
+                "type": "string",
+                "doc": "the original url where the page was fetched"
+              },
+              {
+                "name": "Raw",
+                "type": "string",
+                "doc": "the raw html for the page"
+              }
+            ]
+          }
+        }
       }
     ]
   }
