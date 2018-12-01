@@ -18,8 +18,8 @@ const (
 	establishmentPageListTemplate = rootPageTemplate + "vestiginglijst.html?lang=en&ondernemingsnummer=%s&page=%d"
 
 	//page types
-	mainType          = "main"
-	establishmentType = "establishment"
+	MainType          = "main"
+	EstablishmentType = "establishment"
 
 	establishmentsPerPage = 20
 )
@@ -97,7 +97,7 @@ func (f *CompanyFetcher) FetchCompanyPages(dossierNumber string) (result *model.
 	raw, _ := ioutil.ReadAll(body)
 
 	page := model.NewCompanyPage()
-	page.Type = mainType
+	page.Type = MainType
 	page.Raw = string(raw[:])
 	page.OriginalUrl = url
 	pages = append(pages, page)
@@ -149,7 +149,7 @@ func (f *CompanyFetcher) fetchEstablishmentsPages(dossierNumber string, pageNumb
 
 		page := model.NewCompanyPage()
 		page.OriginalUrl = rootPageTemplate + val
-		page.Type = establishmentType
+		page.Type = EstablishmentType
 		page.Raw = string(raw[:])
 
 		pages = append(pages, page)

@@ -2,17 +2,18 @@ package parser
 
 import (
 	"bytes"
+	"github.com/demeyerthom/belgian-companies/pkg/model"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"testing"
 )
 
 const (
-	assetsDir = "../../test/data/publication-pages/"
+	publicationsAssetsDir = "../../test/data/publication-pages/"
 )
 
-func loadFile(fileName string) []byte {
-	page, err := ioutil.ReadFile(assetsDir + fileName)
+func loadPublicationFile(fileName string) []byte {
+	page, err := ioutil.ReadFile(publicationsAssetsDir + fileName)
 	if err != nil {
 		panic(err)
 	}
@@ -25,7 +26,10 @@ func TestPublicationParser_ParsePublicationPage(t *testing.T) {
 
 	parser := NewPublicationParser()
 
-	publications, err := parser.ParsePublicationPage(loadFile("publications-list.html"))
+	raw := loadPublicationFile("publications-list.html")
+	page := model.NewPublicationPage()
+	page.Raw = string(raw[:])
+	publications, err := parser.ParsePublicationPage(page)
 
 	assert.Nil(err)
 	assert.Len(publications, 30)
@@ -36,7 +40,10 @@ func TestPublicationParser_ParseInvalidDatePublication(t *testing.T) {
 
 	parser := NewPublicationParser()
 
-	publications, err := parser.ParsePublicationPage(loadFile("invalid-date-publication.html"))
+	raw := loadPublicationFile("invalid-date-publication.html")
+	page := model.NewPublicationPage()
+	page.Raw = string(raw[:])
+	publications, err := parser.ParsePublicationPage(page)
 
 	assert.Nil(err)
 	assert.Len(publications, 1)

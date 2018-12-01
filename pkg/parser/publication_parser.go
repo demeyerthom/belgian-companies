@@ -36,8 +36,8 @@ func NewPublicationParser() *PublicationParser {
 	return &PublicationParser{sanitizer: sanitizer}
 }
 
-func (p *PublicationParser) ParsePublicationPage(result []byte) (publications []*model.Publication, err error) {
-	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(result))
+func (p *PublicationParser) ParsePublicationPage(result *model.PublicationPage) (publications []*model.Publication, err error) {
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader([]byte(result.Raw)))
 	if err != nil {
 		panic(err)
 	}

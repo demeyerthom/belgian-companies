@@ -85,7 +85,7 @@ func main() {
 		publicationPage, err := model.DeserializePublicationPage(buf)
 		util.Check(err)
 
-		newPublications, err := publicationParser.ParsePublicationPage([]byte(publicationPage.Raw))
+		newPublications, err := publicationParser.ParsePublicationPage(publicationPage)
 		util.Check(err)
 
 		var messages []kafka.Message
