@@ -35,16 +35,55 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/antchfx/htmlquery"
+  packages = ["."]
+  revision = "9784ecda34b762f95afad99b016b85eaff62a244"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/antchfx/xpath"
+  packages = ["."]
+  revision = "4bbdf6db12aa76808d7b25445919943ed27fdcc0"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
   version = "v1.1.1"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/mailru/easyjson"
+  packages = [
+    ".",
+    "buffer",
+    "jlexer",
+    "jwriter"
+  ]
+  revision = "60711f1a8329503b04e1c88535f419d0bb440bff"
+
+[[projects]]
   name = "github.com/microcosm-cc/bluemonday"
   packages = ["."]
   revision = "82c7118e8ccf7403d4860175d97bb635e8e28239"
   version = "v1.0.1"
+
+[[projects]]
+  name = "github.com/olivere/elastic"
+  packages = [
+    ".",
+    "config",
+    "uritemplates"
+  ]
+  revision = "1619150b007041b6dba8aa447f0e2d151cc2b4c5"
+  version = "v6.2.14"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -97,6 +136,7 @@
   packages = [
     "html",
     "html/atom",
+    "html/charset",
     "internal/socks",
     "proxy"
   ]
@@ -111,9 +151,33 @@
   ]
   revision = "bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e"
 
+[[projects]]
+  name = "golang.org/x/text"
+  packages = [
+    "encoding",
+    "encoding/charmap",
+    "encoding/htmlindex",
+    "encoding/internal",
+    "encoding/internal/identifier",
+    "encoding/japanese",
+    "encoding/korean",
+    "encoding/simplifiedchinese",
+    "encoding/traditionalchinese",
+    "encoding/unicode",
+    "internal/gen",
+    "internal/tag",
+    "internal/utf8internal",
+    "language",
+    "runes",
+    "transform",
+    "unicode/cldr"
+  ]
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a78b6de8803a803c0e8e39ce5befce17b25c85a5f43257060c0e491d2ab728fe"
+  inputs-digest = "58e7dd4064ca8d62a95a8b1013f8976bc7c4944b86aa27ee3af0597c967479fa"
   solver-name = "gps-cdcl"
   solver-version = 1

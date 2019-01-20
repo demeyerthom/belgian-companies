@@ -1,0 +1,18 @@
+{
+  "namespace": "nl.demeyer.belgiancompanies.publications",
+  "type": "record",
+  "name": "PublicationPage",
+  "doc": "A page from the Belgian Handelsregister containing multiple publications",
+  "fields": [
+    {
+      "name": "OriginalUrl",
+      "type": "string",
+      "doc": "the original url where the page was fetched"
+    },
+    {
+      "name": "Raw",
+      "type": "string",
+      "doc": "the raw html for the page"
+    }
+  ]
+}

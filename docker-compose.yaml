@@ -1,11 +1,15 @@
-version: '3'
+version: '2'
 
 services:
 
   zookeeper:
     image: wurstmeister/zookeeper
+    labels:
+      - nl.demeyer.environment=testing
     ports:
       - 2181:2181
+    networks:
+      - development
 
   kafka:
     image: wurstmeister/kafka:2.11-2.0.0
@@ -16,13 +20,55 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_CREATE_TOPICS: "publication-pages:1:1,publications:1:1,company-pages:1:1,companies:1:1"
       KAFKA_LOG_DIRS: "/kafka/kafka-logs"
+    labels:
+      - nl.demeyer.environment=testing
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./docker/kafka:/kafka
     depends_on:
       - zookeeper
+    networks:
+      - development
 
   tor:
-    image: peterdavehello/tor-socks-proxy:latest
+    image: peterdavehello/tor-socks-proxy
+    labels:
+      - nl.demeyer.environment=testing
     ports:
       - 9150:9150
+    networks:
+      - development
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.3
+    container_name: elasticsearch
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - docker/elasticsearch/data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - development
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:5.4.3
+    environment:
+      - "ELASTICSEARCH_URL=http://elasticsearch:9200"
+    ports:
+      - 4000:5601
+    depends_on:
+      - elasticsearch
+    networks:
+      - development
+
+networks:
+  development:
+
+

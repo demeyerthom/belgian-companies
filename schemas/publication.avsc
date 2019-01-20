@@ -1,71 +1,51 @@
-[
-  {
-    "namespace": "nl.demeyer.belgiancompanies.publications",
-    "type": "record",
-    "name": "Publication",
-    "doc": "A Belgian Handelsregister publication",
-    "fields": [
-      {
-        "name": "ID",
-        "type": "int",
-        "doc": "the publication id"
+{
+  "type": "record",
+  "name": "Publication",
+  "namespace": "nl.demeyer.belgiancompanies.publications",
+  "doc": "A Belgian Handelsregister publication",
+  "fields": [
+    {
+      "name": "ID",
+      "type": "int",
+      "doc": "the publication id"
+    },
+    {
+      "name": "DossierNumber",
+      "type": "string",
+      "doc": "the company dossier number"
+    },
+    {
+      "name": "CompanyName",
+      "type": "string",
+      "doc": "the company name"
+    },
+    {
+      "name": "Address",
+      "type": "string",
+      "doc": "the company address"
+    },
+    {
+      "name": "FileLocation",
+      "type": "string",
+      "doc": "the file location of the publication"
+    },
+    {
+      "name": "DatePublication",
+      "type": "string",
+      "doc": "the date of publication"
+    },
+    {
+      "name": "Subjects",
+      "type": {
+        "type": "array",
+        "items": "string"
       },
-      {
-        "name": "DossierNumber",
-        "type": "string",
-        "doc": "the company dossier number"
-      },
-      {
-        "name": "CompanyName",
-        "type": "string",
-        "doc": "the company name"
-      },
-      {
-        "name": "Address",
-        "type": "string",
-        "doc": "the company address"
-      },
-      {
-        "name": "FileLocation",
-        "type": "string",
-        "doc": "the file location of the publication"
-      },
-      {
-        "name": "DatePublication",
-        "type": "string",
-        "doc": "the date of publication"
-      },
-      {
-        "name": "Subjects",
-        "type": {
-          "type": "array",
-          "items": "string"
-        },
-        "doc": "the publication subjects"
-      },
-      {
-        "name": "Raw",
-        "type": "string",
-        "doc": "the raw html for the publication"
-      }
-    ]
-  },
-  {
-    "namespace": "nl.demeyer.belgiancompanies.publications",
-    "type": "record",
-    "name": "PublicationPage",
-    "doc": "A page from the Belgian Handelsregister containing multiple publications",
-    "fields": [
-      {
-        "name": "OriginalUrl",
-        "type": "string",
-        "doc": "the original url where the page was fetched"
-      },
-      {
-        "name": "Raw",
-        "type": "string",
-        "doc": "the raw html for the page"
-      }
-    ]
-  }
-]
+      "doc": "the publication subjects"
+    },
+    {
+      "name": "Raw",
+      "type": "string",
+      "doc": "the raw html for the publication"
+    }
+  ]
+}

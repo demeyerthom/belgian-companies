@@ -16,7 +16,7 @@ import (
 
 var (
 	// Resources
-	appName           = "parse-publication-pages"
+	appName           = "parse-publications"
 	rootURL           = "proxy://www.ejustice.just.fgov.be"
 	reader            *kafka.Reader
 	writer            *kafka.Writer
@@ -26,9 +26,9 @@ var (
 	inputTopic    = kingpin.Flag("input-topic", "the kafka input topic").Envar("INPUT_TOPIC").Default("publication-pages").String()
 	outputTopic   = kingpin.Flag("output-topic", "the kafka output topic").Envar("OUTPUT_TOPIC").Default("publications").String()
 	kafkaBrokers  = kingpin.Flag("brokers", "which kafka brokers to use").Envar("BROKERS").Default("localhost:9092").Strings()
-	consumerID    = kingpin.Flag("consumer-id", "the group id for the consumer").Envar("CONSUMER_ID").String()
+	consumerID    = kingpin.Flag("consumer-id", "the group id for the consumer").Envar("CONSUMER_ID").Default("parse-publications").String()
 	withDocuments = kingpin.Flag("documents", "whether to fetch parser with documents").Envar("DOCUMENTS").Bool()
-	documentPath  = kingpin.Flag("document-path", "the location to download the documents to").Envar("DOCUMENT_PATH").Default("/tmp").String()
+	documentPath  = kingpin.Flag("document-path", "the location to download the documents to").Envar("DOCUMENT_PATH").Default("/documents").String()
 )
 
 func init() {
@@ -68,7 +68,7 @@ func main() {
 		log.Info("closed kafka writer")
 
 		reader.Close()
-		log.Info("closed cron")
+		log.Info("closed kafka reader")
 
 		os.Exit(0)
 	}()

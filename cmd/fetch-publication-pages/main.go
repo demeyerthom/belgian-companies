@@ -33,7 +33,7 @@ var (
 	// Daily runner
 	cronCommandName = "cron"
 	cronCommand     = kingpin.Command(cronCommandName, "run fetch publication pages on a continuous basis")
-	cronSpec        = cronCommand.Flag("cron-spec", "the cron specification to run").Envar("CRON_SPEC").Default("0 4 * * *").String()
+	cronSpec        = cronCommand.Flag("cron-spec", "the cron specification to run").Envar("CRON_SPEC").Default("0 0 2 * * *").String()
 
 	// Defined range runner
 	rangeCommandName = "range"
@@ -77,10 +77,12 @@ func main() {
 
 	switch currentCommand {
 	case cronCommandName:
+		log.Info("starting cron")
 		cronHandler.AddFunc(*cronSpec, fetchPublicationPageForYesterday)
 		cronHandler.Start()
 		select {}
 	case rangeCommandName:
+		log.Info("starting range command")
 		startDate, _ := time.Parse(defaultTimeLayout, *start)
 		endDate, _ := time.Parse(defaultTimeLayout, *end)
 		fetchPublicationPagesDateRange(startDate, endDate)

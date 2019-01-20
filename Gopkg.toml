@@ -32,3 +32,11 @@
 [[constraint]]
   name = "github.com/microcosm-cc/bluemonday"
   version = "1.0.1"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/antchfx/htmlquery"
+
+[[constraint]]
+  name = "github.com/olivere/elastic"
+  version = "6.2.14"

@@ -2,7 +2,6 @@ package parser
 
 import (
 	"bytes"
-	"github.com/demeyerthom/belgian-companies/pkg/fetcher"
 	"github.com/demeyerthom/belgian-companies/pkg/model"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -31,13 +30,12 @@ func TestCompanyParser_ParseCompanyPages(t *testing.T) {
 
 	mainPage := model.NewCompanyPage()
 	mainPage.Raw = string(loadCompanyFile("684446351-main.html")[:])
-	mainPage.Type = fetcher.MainType
+	pages.Company = mainPage
 
 	establishmentPage := model.NewCompanyPage()
 	establishmentPage.Raw = string(loadCompanyFile("684446351-establishment-2269751597.html")[:])
-	establishmentPage.Type = fetcher.EstablishmentType
 
-	pages.Pages = append(pages.Pages, mainPage, establishmentPage)
+	pages.Establishments = append(pages.Establishments, establishmentPage)
 
 	company, err := parser.ParseCompanyPages(pages)
 

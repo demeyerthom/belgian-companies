@@ -86,7 +86,8 @@ func TestCompanyFetcher_FetchCompanyPagesWithSingleEstablishment(t *testing.T) {
 	pages, err := fetcher.FetchCompanyPages(companyId)
 
 	assert.Nil(err)
-	assert.Len(pages.Pages, 2)
+	assert.NotNil(pages.Company)
+	assert.Len(pages.Establishments, 1)
 }
 
 func TestCompanyFetcher_FetchCompanyPagesNoEstablishments(t *testing.T) {
@@ -109,7 +110,8 @@ func TestCompanyFetcher_FetchCompanyPagesNoEstablishments(t *testing.T) {
 	pages, err := fetcher.FetchCompanyPages(companyId)
 
 	assert.Nil(err)
-	assert.Len(pages.Pages, 1)
+	assert.NotNil(pages.Company)
+	assert.Len(pages.Establishments, 0)
 }
 
 //func TestCompanyFetcher_FetchCompanyPagesManyEstablishments(t *testing.T) {
