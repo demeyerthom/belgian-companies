@@ -1,0 +1,33 @@
+{
+  "namespace": "nl.demeyer.belgiancompanies.companies",
+  "type": "record",
+  "name": "FinancialInformation",
+  "doc": "financial information for the company",
+  "fields": [
+    {
+      "name": "AuthorizedCapital",
+      "type": "string",
+      "doc": "the authorized capital"
+    },
+    {
+      "name": "AnnualAssembly",
+      "type": "string",
+      "doc": ""
+    },
+    {
+      "name": "EndDateFinancialYear",
+      "type": "string",
+      "doc": "the end date for the financial year"
+    },
+    {
+      "name": "StartDateExceptionalYear",
+      "type": "string",
+      "doc": "start date for the exceptional year"
+    },
+    {
+      "name": "EndDateExceptionalYear",
+      "type": "string",
+      "doc": "the end date for the exceptional year"
+    }
+  ]
+}

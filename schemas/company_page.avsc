@@ -1,0 +1,17 @@
+{
+  "namespace": "nl.demeyer.belgiancompanies.companies",
+  "name": "CompanyPage",
+  "type": "record",
+  "fields": [
+    {
+      "name": "OriginalUrl",
+      "type": "string",
+      "doc": "the original url where the page was fetched"
+    },
+    {
+      "name": "Raw",
+      "type": "string",
+      "doc": "the raw html for the page"
+    }
+  ]
+}

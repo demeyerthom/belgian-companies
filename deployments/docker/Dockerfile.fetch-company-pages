@@ -1,0 +1,4 @@
+FROM scratch
+#COPY /etc/ssl/certs/ca-certificates.crt /ca-certificates.crt
+COPY fetch-company-pages /
+CMD ["/fetch-company-pages"]

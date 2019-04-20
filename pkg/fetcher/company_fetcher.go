@@ -7,7 +7,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"math"
-	"net/http"
 	"strconv"
 	"strings"
 )
@@ -28,23 +27,6 @@ func NewCompanyFetcher(client HttpClient, sleep int) *CompanyFetcher {
 	baseFetcher := &Fetcher{client: client, maxSleep: sleep}
 
 	return &CompanyFetcher{baseFetcher}
-}
-
-func (f *CompanyFetcher) CompanyPageExists(dossierNumber string) bool {
-	url := fmt.Sprintf(companyMainPageTemplate, dossierNumber)
-
-	resp, err := f.client.Get(url)
-	if err != nil {
-		log.WithError(err).Errorf("An error occurred while performing an http request: %s", err)
-		return false
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return false
-	}
-
-	return true
 }
 
 func (f *CompanyFetcher) FetchCompanyPages(dossierNumber string) (result *model.CompanyPages, err error) {

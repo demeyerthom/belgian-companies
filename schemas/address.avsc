@@ -1,0 +1,40 @@
+{
+  "namespace": "nl.demeyer.belgiancompanies.companies",
+  "type": "record",
+  "name": "DatedAddress",
+  "doc": "an address with a date attached",
+  "fields": [
+    {
+      "name": "Address",
+      "type": {
+        "namespace": "nl.demeyer.belgiancompanies.companies",
+        "type": "record",
+        "name": "Address",
+        "doc": "An address",
+        "fields": [
+          {
+            "name": "Street",
+            "type": "string",
+            "doc": "the street"
+          },
+          {
+            "name": "PostalCode",
+            "type": "int",
+            "doc": "the postal code"
+          },
+          {
+            "name": "Place",
+            "type": "string",
+            "doc": "the place"
+          }
+        ]
+      },
+      "doc": "the address"
+    },
+    {
+      "name": "DateFrom",
+      "type": "string",
+      "doc": "the date from which the subject is valid"
+    }
+  ]
+}

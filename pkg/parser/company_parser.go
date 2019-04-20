@@ -2,7 +2,6 @@ package parser
 
 import (
 	"errors"
-	"fmt"
 	"github.com/antchfx/htmlquery"
 	"github.com/demeyerthom/belgian-companies/pkg/model"
 	"github.com/microcosm-cc/bluemonday"
@@ -124,13 +123,13 @@ func (p *CompanyParser) parseStatus(node *html.Node) (string, error) {
 	return strings.ToLower(strings.TrimSpace(htmlquery.InnerText(nodes[0]))), nil
 }
 
-func (p *CompanyParser) parseLegalSituation(node *html.Node) (item *model.DatedItem, err error) {
+func (p *CompanyParser) parseLegalSituation(node *html.Node) (item *model.LegalSituation, err error) {
 	nodes := htmlquery.Find(node, "//div[@id='table']/table//td[contains(@class, 'QL') and text()[contains(.,'Legal situation:')]]/../td[2]")
 	if len(nodes) != 1 {
 		return nil, errors.New("could not find legal situation")
 	}
 
-	item = model.NewDatedItem()
+	item = model.NewLegalSituation()
 
 	statusNodes := htmlquery.Find(nodes[0], "//strong/span")
 	if len(statusNodes) != 1 {
@@ -157,13 +156,13 @@ func (p *CompanyParser) parseStartDate(node *html.Node) (string, error) {
 	return strings.ToLower(strings.TrimSpace(htmlquery.InnerText(nodes[0]))), nil
 }
 
-func (p *CompanyParser) parseLegalName(node *html.Node) (item *model.DatedItem, err error) {
+func (p *CompanyParser) parseLegalName(node *html.Node) (item *model.LegalName, err error) {
 	nodes := htmlquery.Find(node, "//div[@id='table']/table//td[contains(@class, 'QL') and text()[contains(.,'Legal name:')]]/../td[2]")
 	if len(nodes) != 1 {
 		return nil, errors.New("could not find legal name")
 	}
 
-	item = model.NewDatedItem()
+	item = model.NewLegalName()
 
 	nameNodes := htmlquery.Find(nodes[0], "/text()")
 	if len(nameNodes) < 1 && len(nameNodes) > 2 {
@@ -242,13 +241,13 @@ func (p *CompanyParser) parseLegalType(node *html.Node) (string, error) {
 	return strings.TrimSpace(htmlquery.InnerText(nodes[0])), nil
 }
 
-func (p *CompanyParser) parseLegalForm(node *html.Node) (item *model.DatedItem, err error) {
+func (p *CompanyParser) parseLegalForm(node *html.Node) (item *model.LegalForm, err error) {
 	nodes := htmlquery.Find(node, "//div[@id='table']/table//td[contains(@class, 'RL') and text()[contains(.,'Legal form:')]]/../td[2]")
 	if len(nodes) != 1 {
 		return nil, errors.New("could not find legal form")
 	}
 
-	item = model.NewDatedItem()
+	item = model.NewLegalForm()
 
 	nameNodes := htmlquery.Find(nodes[0], "/text()")
 	if len(nameNodes) < 1 && len(nameNodes) > 2 {
@@ -312,11 +311,10 @@ func (p *CompanyParser) parseLegalFunctions(node *html.Node) ([]*model.LegalFunc
 		"//tr[td[contains(@class, 'I') and text()[contains(.,'Legal functions')]]]"+
 			"/following-sibling::tr[td[not(contains(@class, 'I'))]]",
 	)
-	//tr/
 
 	for _, node := range nodes {
-		text := htmlquery.OutputHTML(node, true)
-		fmt.Print(text)
+		_ = htmlquery.OutputHTML(node, true)
+		//fmt.Print(text)
 	}
 
 	return nil, nil

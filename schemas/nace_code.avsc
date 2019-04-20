@@ -1,0 +1,23 @@
+{
+  "namespace": "nl.demeyer.belgiancompanies.companies",
+  "type": "record",
+  "name": "NACECode",
+  "doc": "NACE codes",
+  "fields": [
+    {
+      "name": "Code",
+      "type": "string",
+      "doc": "the NACE code"
+    },
+    {
+      "name": "SpecifyingGroup",
+      "type": "string",
+      "doc": "the specifying group"
+    },
+    {
+      "name": "DateFrom",
+      "type": "string",
+      "doc": "the date from which the code is valid"
+    }
+  ]
+}

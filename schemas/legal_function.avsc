@@ -1,0 +1,28 @@
+{
+  "namespace": "nl.demeyer.belgiancompanies.companies",
+  "type": "record",
+  "name": "LegalFunction",
+  "doc": "A legal function associated with the company",
+  "fields": [
+    {
+      "name": "Type",
+      "type": "string",
+      "doc": "the legal function type"
+    },
+    {
+      "name": "Name",
+      "type": "string",
+      "doc": "the name"
+    },
+    {
+      "name": "DateFrom",
+      "type": "string",
+      "doc": "the date from which the function was performed"
+    },
+    {
+      "name": "DossierNumber",
+      "type": "string",
+      "doc": "the dossier number related to the legal function"
+    }
+  ]
+}

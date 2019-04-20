@@ -6,7 +6,9 @@ import (
 	"github.com/alecthomas/kingpin"
 	"github.com/demeyerthom/belgian-companies/pkg/fetcher"
 	"github.com/demeyerthom/belgian-companies/pkg/model"
+	"github.com/demeyerthom/belgian-companies/pkg/storage"
 	"github.com/demeyerthom/belgian-companies/pkg/util"
+	"github.com/go-redis/redis"
 	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -16,10 +18,11 @@ import (
 
 var (
 	// Resources
-	appName        = "fetch-company-pages"
-	reader         *kafka.Reader
-	writer         *kafka.Writer
-	companyFetcher *fetcher.CompanyFetcher
+	appName                = "fetch-company-pages"
+	reader                 *kafka.Reader
+	writer                 *kafka.Writer
+	companyFetcher         *fetcher.CompanyFetcher
+	publicationDateStorage *storage.Storage
 
 	// Common flags
 	inputTopic   = kingpin.Flag("input-topic", "the kafka input topic").Envar("INPUT_TOPIC").Default("publications").String()
@@ -28,6 +31,7 @@ var (
 	consumerID   = kingpin.Flag("consumer-id", "the group id for the consumer").Envar("CONSUMER_ID").String()
 	proxyUrl     = kingpin.Flag("proxy-url", "the proxy url to route the request through").Envar("PROXY_URL").Default("socks5://127.0.0.1:9150").String()
 	sleep        = kingpin.Flag("sleep", "the max period to sleep after each request").Envar("SLEEP").Default("10").Int()
+	redisUrl     = kingpin.Flag("redis-url", "the redis url").Envar("REDIS_URL").Default("localhost:6379").String()
 )
 
 func init() {
@@ -57,6 +61,10 @@ func init() {
 		Topic:    *outputTopic,
 		Balancer: &kafka.Hash{},
 	})
+
+	redisClient := *redis.NewClient(&redis.Options{Addr: *redisUrl})
+	publicationDateStorage = storage.NewStorage(storage.NewRedisAdapter(redisClient))
+
 }
 
 func main() {
@@ -71,6 +79,9 @@ func main() {
 		writer.Close()
 		log.Info("closed kafka writer")
 
+		publicationDateStorage.Close()
+		log.Info("closed redis storage")
+
 		os.Exit(0)
 	}()
 
@@ -79,9 +90,18 @@ func main() {
 		message, err := reader.FetchMessage(context.Background())
 		util.Check(err)
 
+		log.Debug("deserializing message")
 		publication, err := model.DeserializePublication(bytes.NewBuffer(message.Value))
 		util.Check(err)
 
+		shouldNotProcess, err := publicationDateStorage.ShouldNotProcess(publication)
+		util.Check(err)
+		if shouldNotProcess {
+			log.Infof("skipping fetching company pages for dossier %s", publication.DossierNumber)
+			continue
+		}
+
+		log.Debug("fetching company pages")
 		result, err := companyFetcher.FetchCompanyPages(publication.DossierNumber)
 		util.Check(err)
 
@@ -89,13 +109,15 @@ func main() {
 		err = result.Serialize(&buf)
 		util.Check(err)
 
-		log.Infof("wrote new page set for company %s", publication.DossierNumber)
+		log.Debugf("wrote new page set for company %s", publication.DossierNumber)
 		err = writer.WriteMessages(context.Background(), kafka.Message{Value: buf.Bytes()})
 
-		if *consumerID != "" {
-			err = reader.CommitMessages(context.Background(), message)
-			util.Check(err)
-		}
-		log.Debug("finished processing publication")
+		log.Debug("storing new publication date for company")
+		err = publicationDateStorage.Update(publication)
+		util.Check(err)
+
+		log.Debug("committing message")
+		err = reader.CommitMessages(context.Background(), message)
+		util.Check(err)
 	}
 }

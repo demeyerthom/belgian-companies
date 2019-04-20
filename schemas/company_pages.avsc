@@ -1,0 +1,21 @@
+{
+  "namespace": "nl.demeyer.belgiancompanies.companies",
+  "type": "record",
+  "name": "CompanyPages",
+  "doc": "A page from the Belgian CBE database containing all pages related",
+  "fields": [
+    {
+      "name": "Company",
+      "doc": "the company page",
+      "type": "nl.demeyer.belgiancompanies.companies.CompanyPage"
+    },
+    {
+      "name": "Establishments",
+      "doc": "all establishment pages",
+      "type": {
+        "type": "array",
+        "items": "nl.demeyer.belgiancompanies.companies.CompanyPage"
+      }
+    }
+  ]
+}
