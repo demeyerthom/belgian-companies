@@ -23,3 +23,6 @@ docker run --name fetch-publication-pages-cron -d \
     -e PATH=/ \
     demeyerthom/fetch-publication-pages:latest \
     fetch-publication-pages cron
+
+## Remove binaries
+make clean

@@ -18,3 +18,6 @@ docker run --name parse-publications -d \
     --restart always \
     -e BROKERS=broker:9092 \
     demeyerthom/parse-publications:latest
+
+## Remove binaries
+make clean
