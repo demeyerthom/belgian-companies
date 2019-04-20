@@ -1,15 +1,13 @@
-version: '2'
+version: '3.5'
 
 services:
 
   zookeeper:
     image: wurstmeister/zookeeper
     labels:
-      - nl.demeyer.environment=testing
+      nl.demeyerthom.environment: testing
     ports:
       - 2181:2181
-    networks:
-      - development
 
   kafka:
     image: wurstmeister/kafka:2.11-2.0.0
@@ -21,54 +19,36 @@ services:
       KAFKA_CREATE_TOPICS: "publication-pages:1:1,publications:1:1,company-pages:1:1,companies:1:1"
       KAFKA_LOG_DIRS: "/kafka/kafka-logs"
     labels:
-      - nl.demeyer.environment=testing
+      nl.demeyerthom.environment: testing
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./docker/kafka:/kafka
     depends_on:
       - zookeeper
-    networks:
-      - development
 
   tor:
     image: peterdavehello/tor-socks-proxy
     labels:
-      - nl.demeyer.environment=testing
+      nl.demeyerthom.environment: testing
     ports:
       - 9150:9150
-    networks:
-      - development
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.3
-    container_name: elasticsearch
-    environment:
-      - cluster.name=docker-cluster
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
+  arangodb:
+    image: arangodb:latest
+    ports:
+      - 8530:8529
     volumes:
-      - docker/elasticsearch/data:/usr/share/elasticsearch/data
-    ports:
-      - 9200:9200
-    networks:
-      - development
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:5.4.3
+      - ./docker/arangodb:/var/lib/arangodb3
     environment:
-      - "ELASTICSEARCH_URL=http://elasticsearch:9200"
+      - ARANGO_NO_AUTH=1
+    labels:
+      nl.demeyerthom.environment: testing
+
+  redis:
+    image: redis
     ports:
-      - 4000:5601
-    depends_on:
-      - elasticsearch
-    networks:
-      - development
-
-networks:
-  development:
-
-
+      - 6379:6379
+    labels:
+      nl.demeyerthom.environment: testing
+    volumes:
+      - ./docker/redis:/data
