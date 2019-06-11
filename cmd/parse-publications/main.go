@@ -73,8 +73,6 @@ func main() {
 		os.Exit(0)
 	}()
 
-	count := 0
-
 	for {
 		log.Debug("fetching next message")
 		message, err := reader.FetchMessage(context.Background())
@@ -102,8 +100,7 @@ func main() {
 
 			messages = append(messages, kafka.Message{Value: buf.Bytes()})
 
-			count = count + 1
-			log.WithField("publication", publication).Debug("writing new publication")
+			log.WithField("publication", publication).Debug("adding new publication")
 		}
 
 		err = writer.WriteMessages(context.Background(), messages...)

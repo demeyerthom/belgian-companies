@@ -22,14 +22,15 @@ type PublicationParser struct {
 	sanitizer *bluemonday.Policy
 }
 
-const (
-	DossierIndex                 = 2
-	AddressIndex                 = 1
-	DatePublicationIndexReversed = 1
-	SubjectsIndexReversed        = 2
+var (
+	CompanyNameIndex   = 0
+	AddressIndex       = 1
+	DossierNumberIndex = 2
+	SubjectIndex       = 3
 )
 
-var re = regexp.MustCompile(`^(?P<date>[0-9]{4}-[0-9]{1,2}-[0-9]{1,2})\s+\/\s+(?P<publication_id>[\d]{1,8})`)
+var dossierNumberRegex = regexp.MustCompile("[^a-zA-Z0-9]+")
+var dateAndPublicationRegex = regexp.MustCompile(`^(?P<date>[0-9]{4}-[0-9]{1,2}-[0-9]{1,2})\s+\/\s+(?P<publication_id>[\d]{1,8})`)
 
 func NewPublicationParser() *PublicationParser {
 	sanitizer := bluemonday.UGCPolicy()
@@ -62,23 +63,18 @@ func (p *PublicationParser) parseNode(node goquery.Selection) (publication *mode
 	publication = model.NewPublication()
 	breakCount := len(node.Find("br").Nodes)
 
-	if breakCount >= 4 && breakCount <= 5 {
-		publication.CompanyName = p.parseCompanyNameFromNode(node)
-		publication.FileLocation = p.parseFileLocationFromNode(node)
-		publication.Raw = p.parseRawFromNode(node)
-
-		html, _ := node.Html()
-		elements := strings.Split(html, "<br/>")
-		publication.DossierNumber = p.parseDossierNumberFromElements(elements)
-		publication.Address = p.parseAddressFromElements(elements)
-		publication.ID, publication.DatePublication, err = p.parseIDAndDatePublicationFromElements(elements)
-		publication.Subjects = p.parseSubjectsFromElements(elements)
-		if err != nil {
-			return publication, err
-		}
-	} else {
+	if breakCount < 1 {
 		return nil, errors.New(fmt.Sprintf("invalid number of nodes: %d", breakCount))
 	}
+	publication.Raw = p.returnRawFromNode(node)
+
+	html, _ := node.Html()
+	elements := strings.Split(html, "<br/>")
+	publication.CompanyName, publication.LegalType = p.parseCompanyNameAndLegalFormFromElements(elements)
+	publication.DossierNumber = p.parseDossierNumberFromElements(elements)
+	publication.Address = p.parseAddressFromElements(elements)
+	publication.ID, publication.DatePublication, publication.FileLocation = p.parseIDDatePublicationAndFileLocationFromElements(elements)
+	publication.Subjects = p.parseSubjects(elements)
 
 	if p.IsInvalidPublication(publication) {
 		html, _ := node.Html()
@@ -90,60 +86,54 @@ func (p *PublicationParser) parseNode(node goquery.Selection) (publication *mode
 }
 
 func (p *PublicationParser) parseDossierNumberFromElements(elements []string) string {
-	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return reg.ReplaceAllString(elements[DossierIndex], "")
+	return dossierNumberRegex.ReplaceAllString(elements[DossierNumberIndex], "")
 }
 
 func (p *PublicationParser) parseAddressFromElements(elements []string) string {
 	return strings.TrimSpace(elements[AddressIndex])
 }
 
-func (p *PublicationParser) parseSubjectsFromElements(elements []string) (subjects []string) {
-	subjectElement := elements[len(elements)-SubjectsIndexReversed]
+func (p *PublicationParser) parseIDDatePublicationAndFileLocationFromElements(elements []string) (publicationID int32, publicationDate string, fileLocation string) {
+	var subMatchMap = make(map[string]string)
+	var key int
 
-	for _, item := range strings.Split(subjectElement, "-") {
-		subjects = append(subjects, strings.TrimSpace(item))
-	}
+	for i, element := range elements {
+		match := dateAndPublicationRegex.FindStringSubmatch(element)
 
-	return subjects
-}
+		if len(match) != 3 {
+			continue
+		}
 
-func (p *PublicationParser) parseIDAndDatePublicationFromElements(elements []string) (publicationID int32, publicationDate string, err error) {
-	dateElement := elements[len(elements)-DatePublicationIndexReversed]
-
-	match := re.FindStringSubmatch(dateElement)
-	subMatchMap := make(map[string]string)
-	for i, name := range re.SubexpNames() {
-		if i != 0 {
+		for i, name := range dateAndPublicationRegex.SubexpNames() {
 			subMatchMap[name] = match[i]
 		}
+		key = i
+		break
 	}
 
-	if len(subMatchMap) != 2 {
-		return publicationID, publicationDate, errors.New(fmt.Sprintf("found invalid number of publication dates: %d", len(subMatchMap)))
+	if len(subMatchMap) == 0 {
+		return publicationID, publicationDate, fileLocation
 	}
+
+	doc, _ := goquery.NewDocumentFromReader(bytes.NewReader([]byte(elements[key])))
+	fileLocation, _ = doc.Find("a").Attr("href")
 
 	id, _ := strconv.Atoi(subMatchMap["publication_id"])
 
-	return int32(id), subMatchMap["date"], err
+	return int32(id), subMatchMap["date"], fileLocation
 }
 
-func (p *PublicationParser) parseCompanyNameFromNode(selection goquery.Selection) string {
-	return strings.TrimSpace(selection.Find("font").Text())
+func (p *PublicationParser) parseCompanyNameAndLegalFormFromElements(elements []string) (name string, legalForm string) {
+	doc, _ := goquery.NewDocumentFromReader(bytes.NewReader([]byte(elements[CompanyNameIndex])))
+	name, _ = doc.Find("font").Html()
+	legalForm = strings.TrimSpace(strings.Replace(doc.Text(), name, "", 1))
+
+	return name, legalForm
 }
 
-func (p *PublicationParser) parseRawFromNode(selection goquery.Selection) string {
+func (p *PublicationParser) returnRawFromNode(selection goquery.Selection) string {
 	text, _ := selection.Html()
 	return p.sanitizer.Sanitize(text)
-}
-
-func (p *PublicationParser) parseFileLocationFromNode(selection goquery.Selection) string {
-	documentLink, _ := selection.Find("a").Attr("href")
-	return documentLink
 }
 
 func (p *PublicationParser) IsInvalidPublication(publication *model.Publication) bool {
@@ -180,4 +170,15 @@ func (p *PublicationParser) DownloadFile(filePath string, url string) error {
 	}
 
 	return nil
+}
+
+func (p *PublicationParser) parseSubjects(elements []string) (subjects []string) {
+	subjectsElement := elements[SubjectIndex]
+
+	rawSubjects := strings.Split(subjectsElement, "-")
+	for _, rawSubject := range rawSubjects {
+		subjects = append(subjects, strings.TrimSpace(rawSubject))
+	}
+
+	return subjects
 }

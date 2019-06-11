@@ -10,9 +10,20 @@
       "doc": "the publication id"
     },
     {
+      "name": "DatePublication",
+      "type": "string",
+      "doc": "the date of publication"
+    },
+    {
       "name": "DossierNumber",
       "type": "string",
       "doc": "the company dossier number"
+    },
+    {
+      "name": "LegalType",
+      "type": "string",
+      "doc": "the company legal type",
+      "default": ""
     },
     {
       "name": "CompanyName",
@@ -25,14 +36,15 @@
       "doc": "the company address"
     },
     {
+      "name": "Comment",
+      "type": "string",
+      "doc": "additional comments",
+      "default": ""
+    },
+    {
       "name": "FileLocation",
       "type": "string",
       "doc": "the file location of the publication"
-    },
-    {
-      "name": "DatePublication",
-      "type": "string",
-      "doc": "the date of publication"
     },
     {
       "name": "Subjects",

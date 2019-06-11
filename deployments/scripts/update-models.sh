@@ -9,7 +9,8 @@ do
     FILENAME=$(basename -- "$f")
     SCHEMA="${FILENAME%.*}"
 
-    http --ignore-stdin -v POST :8081/subjects/${SCHEMA}/versions \
+    http --ignore-stdin -v \
+      POST 192.168.178.37:8081/subjects/${SCHEMA}/versions \
       Accept:application/vnd.schemaregistry.v1+json \
       schema=@${f}
 done

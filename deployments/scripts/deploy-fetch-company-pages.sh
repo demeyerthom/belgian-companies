@@ -4,7 +4,7 @@ dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd ${dir}/../../
 
 ## Build Go binary
-//make build-fetch-company-pages
+CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ./bin/fetch-company-pages ./cmd/fetch-company-pages/
 
 ## Build docker image
 docker build -t demeyerthom/fetch-company-pages:latest \
