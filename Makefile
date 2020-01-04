@@ -1,18 +1,19 @@
+.DEFAULT_GOAL := build
 
-env: ## Create testing environment
-	docker-compose up -d
+build: packages build-fetch-company-pages build-fetch-publication-pages build-parse-publications ## Build all binaries
+
+packages: ## Download packages
+	@go mod download
 
 models: ## Create models
 	@gogen-avro --package=model pkg/model \
 		schemas/publication.avsc \
-		schemas/publication-page.avsc \
-		schemas/company.avsc \
-		schemas/address.avsc \
-		schemas/company_page.avsc \
-		schemas/company_pages.avsc \
-		schemas/financial_information.avsc \
-		schemas/legal_function.avsc \
-		schemas/nace_code.avsc
+		schemas/page.avsc \
+		schemas/company.avsc
+
+dep: ## Download dependencies
+	@go get -d github.com/actgardner/gogen-avro/...
+	@go install github.com/actgardner/gogen-avro/gogen-avro
 
 lint:
 	@golint pkg/* cmd/*
@@ -28,9 +29,6 @@ build-fetch-publication-pages: ## Build and deploy fetch-publication-pages
 
 build-parse-publications: ## Build and deploy parse-publications
 	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ./bin/parse-publications ./cmd/parse-publications/
-
-build-project-publications: ## Build and deploy project-publications
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ./bin/project-publications ./cmd/project-publications/
 
 build-fetch-company-pages: ## Build and deploy fetch-publication-pages
 	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ./bin/fetch-company-pages ./cmd/fetch-company-pages/

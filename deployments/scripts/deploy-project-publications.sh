@@ -1,7 +1,7 @@
 #!/bin/bash
 
 dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
-cd ${dir}/../../
+cd "${dir}"/../../ || exit
 
 ## Build Go binary
 make build-project-publications

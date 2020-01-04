@@ -1,7 +1,7 @@
 #!/bin/bash
 
 dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
-cd ${dir}/../../
+cd "${dir}"/../../ || exit
 
 ## Build Go binary
 make build-fetch-publication-pages
@@ -21,7 +21,7 @@ docker run --name fetch-publication-pages-range -d \
     -e PROXY_URL=socks5://proxy:9150 \
     -e PATH=/ \
     demeyerthom/fetch-publication-pages:latest \
-    fetch-publication-pages range ${STARTVAR} ${ENDVAR}
+    fetch-publication-pages range "${STARTVAR}" "${ENDVAR}"
 
 ## Remove binaries
 make clean
